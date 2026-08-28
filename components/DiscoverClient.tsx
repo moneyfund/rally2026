@@ -36,6 +36,7 @@ export function DiscoverClient() {
           const data = snapshotDoc.data();
           if (data.status && data.status !== "active") return;
 
+          const kind: "persona" | "negocio" = data.kind === "negocio" ? "negocio" : "persona";
           const name = String(data.name ?? "Perfil Germina");
           const location = String(data.location ?? "Nicaragua");
           const rawCoords = data.coordinates && typeof data.coordinates === "object" ? data.coordinates as Record<string, unknown> : null;
@@ -45,8 +46,9 @@ export function DiscoverClient() {
             id: 10000 + index,
             uid: snapshotDoc.id,
             avatarUrl: String(data.avatarUrl ?? data.googlePhotoUrl ?? ""),
+            kind,
             name,
-            role: String(data.profession ?? data.headline ?? data.category ?? "Talento Germina"),
+            role: String(data.profession ?? data.headline ?? data.category ?? (kind === "negocio" ? "Negocio Germina" : "Talento Germina")),
             category: String(data.category ?? "Servicios"),
             location,
             department: location,
@@ -59,9 +61,9 @@ export function DiscoverClient() {
             initials: initialsFrom(name),
             accent: "linear-gradient(135deg, #071d36, #315d89)",
             mapPosition: { x: 0, y: 0 },
-            coordinates: rawCoords && typeof rawCoords.lat === "number" && typeof rawCoords.lng === "number"
+            coordinates: kind === "negocio" && rawCoords && typeof rawCoords.lat === "number" && typeof rawCoords.lng === "number"
               ? { lat: rawCoords.lat, lng: rawCoords.lng }
-              : { lat: 12.114, lng: -86.236 },
+              : { lat: 0, lng: 0 },
           });
         });
 
