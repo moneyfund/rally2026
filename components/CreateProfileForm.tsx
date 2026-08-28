@@ -68,7 +68,6 @@ export function CreateProfileForm() {
         headline,
         description,
         skills,
-        email,
         available: true,
         verified: false,
         status: "active",
