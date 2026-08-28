@@ -13,7 +13,7 @@ type MapProfile = TalentProfile & {
   avatarUrl?: string;
 };
 
-const demoBusinesses = profiles.filter((profile) => profile.kind === "negocio");
+const demoMapProfiles = profiles;
 
 function initialsFrom(name: string) {
   return name.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase()).join("") || "G";
@@ -24,6 +24,16 @@ function directionsUrl(profile: MapProfile) {
   return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${lat},${lng}`)}`;
 }
 
+function sproutIcon(L: typeof import("leaflet")) {
+  return L.divIcon({
+    className: "germina-plant-marker",
+    iconSize: [34, 42],
+    iconAnchor: [17, 38],
+    tooltipAnchor: [0, -34],
+    html: `<span class="germina-plant-marker-inner" aria-hidden="true"><svg viewBox="0 0 32 36" role="presentation"><path d="M16 31V15"/><path d="M16 18C11 18 7 14 7 9c5 0 9 3 9 9Z"/><path d="M16 14c1-6 5-9 11-9 0 6-4 10-11 9Z"/><path d="M11 31h10"/></svg></span>`,
+  });
+}
+
 export function RealMap({ compact = false }: { compact?: boolean }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<import("leaflet").Map | null>(null);
@@ -31,7 +41,7 @@ export function RealMap({ compact = false }: { compact?: boolean }) {
   const markerGroupRef = useRef<import("leaflet").LayerGroup | null>(null);
   const [mapReady, setMapReady] = useState(false);
   const [liveProfiles, setLiveProfiles] = useState<MapProfile[]>([]);
-  const [selected, setSelected] = useState<MapProfile | null>(demoBusinesses[0] ?? null);
+  const [selected, setSelected] = useState<MapProfile | null>(demoMapProfiles[0] ?? null);
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("Todos");
   const [department, setDepartment] = useState("Todos");
@@ -43,25 +53,27 @@ export function RealMap({ compact = false }: { compact?: boolean }) {
       snapshot.docs.forEach((snapshotDoc, index) => {
         const data = snapshotDoc.data();
         if (data.status && data.status !== "active") return;
-        if (data.kind !== "negocio") return;
+        const kind = data.kind === "negocio" ? "negocio" : "persona";
+        const legacyBusinessPublic = typeof data.locationPublic !== "boolean" && kind === "negocio";
+        if (data.locationPublic !== true && !legacyBusinessPublic) return;
 
         const coords = data.coordinates && typeof data.coordinates === "object" ? data.coordinates as Record<string, unknown> : null;
         if (!coords || typeof coords.lat !== "number" || typeof coords.lng !== "number") return;
 
-        const name = String(data.name ?? "Negocio Germina");
+        const name = String(data.name ?? "Perfil Germina");
         const location = String(data.location ?? "Nicaragua");
         const services = Array.isArray(data.services) ? data.services.map(String) : Array.isArray(data.skills) ? data.skills.map(String) : [];
         items.push({
           id: 20000 + index,
           uid: snapshotDoc.id,
           avatarUrl: String(data.avatarUrl ?? data.googlePhotoUrl ?? ""),
-          kind: "negocio",
+          kind,
           name,
-          role: String(data.profession ?? data.headline ?? data.category ?? "Negocio Germina"),
+          role: String(data.profession ?? data.headline ?? data.category ?? (kind === "negocio" ? "Negocio Germina" : "Talento Germina")),
           category: String(data.category ?? "Servicios"),
           location,
           department: location,
-          description: String(data.description ?? "Negocio creado en Germina."),
+          description: String(data.description ?? "Perfil creado en Germina."),
           skills: services,
           rating: 0,
           reviews: 0,
@@ -77,7 +89,7 @@ export function RealMap({ compact = false }: { compact?: boolean }) {
     }, () => setLiveProfiles([]));
   }, []);
 
-  const allProfiles = useMemo<MapProfile[]>(() => [...liveProfiles, ...demoBusinesses], [liveProfiles]);
+  const allProfiles = useMemo<MapProfile[]>(() => [...liveProfiles, ...demoMapProfiles], [liveProfiles]);
 
   const departments = useMemo(
     () => ["Todos", ...Array.from(new Set(allProfiles.map((profile) => profile.department)))],
@@ -86,14 +98,12 @@ export function RealMap({ compact = false }: { compact?: boolean }) {
 
   const filteredProfiles = useMemo(() => {
     const normalized = query.trim().toLowerCase();
-
     return allProfiles.filter((profile) => {
       const haystack = `${profile.name} ${profile.role} ${profile.category} ${profile.location} ${profile.department} ${profile.skills.join(" ")}`.toLowerCase();
       const matchesQuery = !normalized || haystack.includes(normalized);
       const matchesCategory = category === "Todos" || profile.category === category;
       const matchesDepartment = department === "Todos" || profile.department === department;
       const matchesAvailability = !availableOnly || profile.available;
-
       return matchesQuery && matchesCategory && matchesDepartment && matchesAvailability;
     });
   }, [allProfiles, availableOnly, category, department, query]);
@@ -102,32 +112,25 @@ export function RealMap({ compact = false }: { compact?: boolean }) {
 
   useEffect(() => {
     let cancelled = false;
-
     async function setupMap() {
       if (!containerRef.current || mapRef.current) return;
       const L = await import("leaflet");
       if (cancelled || !containerRef.current) return;
-
       leafletRef.current = L;
       const map = L.map(containerRef.current, {
         scrollWheelZoom: !compact,
         zoomControl: true,
         minZoom: 6,
       }).setView([12.7, -85.25], compact ? 7 : 8);
-
       mapRef.current = map;
       markerGroupRef.current = L.layerGroup().addTo(map);
-
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         maxZoom: 18,
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
       }).addTo(map);
-
       setMapReady(true);
     }
-
     setupMap();
-
     return () => {
       cancelled = true;
       setMapReady(false);
@@ -140,21 +143,14 @@ export function RealMap({ compact = false }: { compact?: boolean }) {
 
   useEffect(() => {
     if (!mapReady || !mapRef.current || !leafletRef.current || !markerGroupRef.current) return;
-
     const L = leafletRef.current;
     const map = mapRef.current;
     const markerGroup = markerGroupRef.current;
     markerGroup.clearLayers();
+    const icon = sproutIcon(L);
 
     filteredProfiles.forEach((profile) => {
-      const marker = L.circleMarker([profile.coordinates.lat, profile.coordinates.lng], {
-        radius: compact ? 8 : 10,
-        color: "#ffffff",
-        weight: 3,
-        fillColor: profile.uid ? "#176293" : "#0a2747",
-        fillOpacity: 1,
-      }).addTo(markerGroup);
-
+      const marker = L.marker([profile.coordinates.lat, profile.coordinates.lng], { icon }).addTo(markerGroup);
       marker.bindTooltip(profile.name, { direction: "top", offset: [0, -10] });
       marker.on("click", () => setSelected(profile));
     });
@@ -187,8 +183,8 @@ export function RealMap({ compact = false }: { compact?: boolean }) {
         <div className={styles.searchArea}>
           <div className={styles.searchTopline}>
             <div>
-              <span className={styles.kicker}>MAPA DE NEGOCIOS</span>
-              <h1>Encontrá negocios y emprendimientos cerca de vos.</h1>
+              <span className={styles.kicker}>MAPA DE UBICACIONES PÚBLICAS</span>
+              <h1>Encontrá talento, servicios y emprendimientos cerca de vos.</h1>
             </div>
             <span className={styles.resultCount}>{filteredProfiles.length} {filteredProfiles.length === 1 ? "resultado" : "resultados"}</span>
           </div>
@@ -196,9 +192,8 @@ export function RealMap({ compact = false }: { compact?: boolean }) {
           <div className={styles.filterBar}>
             <label className={styles.searchField}>
               <Search size={18} />
-              <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar negocio, servicio o categoría" aria-label="Buscar negocios en el mapa" />
+              <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar talento, negocio, servicio o categoría" aria-label="Buscar perfiles con ubicación pública" />
             </label>
-
             <label className={styles.selectField}>
               <SlidersHorizontal size={16} />
               <select value={category} onChange={(event) => setCategory(event.target.value)} aria-label="Filtrar por categoría">
@@ -206,7 +201,6 @@ export function RealMap({ compact = false }: { compact?: boolean }) {
               </select>
               <ChevronDown size={14} />
             </label>
-
             <label className={styles.selectField}>
               <MapPin size={16} />
               <select value={department} onChange={(event) => setDepartment(event.target.value)} aria-label="Filtrar por departamento">
@@ -214,24 +208,22 @@ export function RealMap({ compact = false }: { compact?: boolean }) {
               </select>
               <ChevronDown size={14} />
             </label>
-
             <button type="button" className={`${styles.availabilityButton} ${availableOnly ? styles.availabilityButtonActive : ""}`} onClick={() => setAvailableOnly((value) => !value)} aria-pressed={availableOnly}>
               <span className={styles.statusDot} /> Disponibles
             </button>
-
             {filtersActive ? <button type="button" className={styles.resetButton} onClick={resetFilters} aria-label="Limpiar filtros"><RotateCcw size={16} /></button> : null}
           </div>
         </div>
       ) : null}
 
       <div className={compact ? "" : styles.mapBody}>
-        <div ref={containerRef} className={`real-map ${compact ? "" : styles.realMap}`} aria-label="Mapa interactivo de negocios y emprendimientos en Nicaragua" />
+        <div ref={containerRef} className={`real-map ${compact ? "" : styles.realMap}`} aria-label="Mapa interactivo de perfiles que autorizaron publicar su ubicación" />
 
         {!compact ? (
           <aside className={`map-profile-panel ${styles.profilePanel}`}>
             {selected ? (
               <>
-                <span className="map-panel-kicker"><Navigation size={15} /> {selected.uid ? "NEGOCIO REAL" : "NEGOCIO SELECCIONADO"}</span>
+                <span className="map-panel-kicker"><Navigation size={15} /> {selected.uid ? "UBICACIÓN AUTORIZADA" : "PERFIL DE DEMOSTRACIÓN"}</span>
                 <div className="map-profile-head">
                   <div className="talent-avatar" style={selected.avatarUrl ? undefined : { background: selected.accent }}>{selected.avatarUrl ? <img src={selected.avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "inherit" }} /> : selected.initials}</div>
                   <div><div className="talent-title-row"><h3>{selected.name}</h3>{selected.verified ? <BadgeCheck size={17} /> : null}</div><p>{selected.role}</p></div>
@@ -248,7 +240,7 @@ export function RealMap({ compact = false }: { compact?: boolean }) {
             ) : (
               <div className={styles.emptyPanel}>
                 <Search size={24} />
-                <strong>No encontramos negocios</strong>
+                <strong>No encontramos ubicaciones públicas</strong>
                 <p>Probá cambiando la búsqueda o limpiando los filtros.</p>
                 <button type="button" className="btn btn-primary" onClick={resetFilters}>Limpiar filtros</button>
               </div>
