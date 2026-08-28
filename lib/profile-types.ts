@@ -31,11 +31,13 @@ export type GerminaProfile = {
   description: string;
   location: string;
   coordinates: ProfileCoordinates | null;
+  locationPublic: boolean;
   phone: string;
   socialLinks: SocialLinks;
   services: string[];
   avatarUrl: string;
   googlePhotoUrl: string;
+  coverUrl: string;
   portfolio: PortfolioItem[];
   available: boolean;
   verified: boolean;
@@ -70,11 +72,13 @@ export function emptyProfile(uid = ""): GerminaProfile {
     description: "",
     location: "",
     coordinates: null,
+    locationPublic: false,
     phone: "",
     socialLinks: { ...emptySocialLinks },
     services: [],
     avatarUrl: "",
     googlePhotoUrl: "",
+    coverUrl: "",
     portfolio: [],
     available: true,
     verified: false,
