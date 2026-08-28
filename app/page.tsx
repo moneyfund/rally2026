@@ -39,11 +39,11 @@ export default function Home() {
       <section className="section map-home-section">
         <div className="shell">
           <div className="section-head split-head compact-head">
-            <div><span className="eyebrow">MAPA DE OPORTUNIDADES</span><h2>El talento tiene ubicación. Ahora también tiene visibilidad.</h2></div>
-            <p>Usamos un mapa real de OpenStreetMap para mostrar dónde se encuentran perfiles y emprendimientos dentro de Nicaragua.</p>
+            <div><span className="eyebrow">MAPA DE NEGOCIOS</span><h2>Negocios reales, ubicaciones compartidas voluntariamente.</h2></div>
+            <p>El mapa muestra únicamente negocios y emprendimientos que decidieron marcar su ubicación. Los perfiles de talento no publican un punto exacto.</p>
           </div>
           <RealMap compact />
-          <div className="map-home-footer"><div><MapPinned size={20} /><span><strong>Mapa real e interactivo</strong><small>Explorá talento por ciudad y departamento.</small></span></div><Link href="/mapa" className="btn btn-primary">Abrir mapa completo <ArrowRight size={16} /></Link></div>
+          <div className="map-home-footer"><div><MapPinned size={20} /><span><strong>Mapa real e interactivo</strong><small>Explorá negocios por ciudad y departamento.</small></span></div><Link href="/mapa" className="btn btn-primary">Abrir mapa completo <ArrowRight size={16} /></Link></div>
         </div>
       </section>
 
