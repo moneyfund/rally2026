@@ -1,6 +1,6 @@
 {
   "name": "germina-rally2026",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -8,6 +8,7 @@
     "start": "next start"
   },
   "dependencies": {
+    "firebase": "^12.2.1",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.468.0",
     "next": "^15.5.0",
