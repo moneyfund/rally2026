@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import { ProfileWorkspace } from "@/components/ProfileWorkspace";
+import { ProfileWorkspaceV2 } from "@/components/ProfileWorkspaceV2";
 
 export const metadata: Metadata = {
   title: "Mi perfil",
-  description: "Administrá tu perfil, servicios, ubicación y documentación privada en Germina.",
+  description: "Administrá tu perfil, portada, ubicación, servicios y documentación privada en Germina.",
 };
 
 export default function MiPerfilPage() {
-  return <ProfileWorkspace />;
+  return <ProfileWorkspaceV2 />;
 }
