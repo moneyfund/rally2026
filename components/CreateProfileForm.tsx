@@ -1,7 +1,7 @@
 "use client";
 
 import { ArrowRight, BriefcaseBusiness, CheckCircle2, LockKeyhole, Mail, MapPin, UserRound } from "lucide-react";
-import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { createUserWithEmailAndPassword, deleteUser, updateProfile, type User } from "firebase/auth";
 import { doc, serverTimestamp, writeBatch } from "firebase/firestore";
 import { useState } from "react";
 import { auth, db } from "@/lib/firebase";
@@ -29,9 +29,12 @@ export function CreateProfileForm() {
     }
 
     setLoading(true);
+    let createdUser: User | null = null;
+    let profileSaved = false;
 
     try {
       const credential = await createUserWithEmailAndPassword(auth, email, password);
+      createdUser = credential.user;
       const uid = credential.user.uid;
       const name = String(form.get("name") ?? "").trim();
       const category = String(form.get("category") ?? "");
@@ -74,10 +77,18 @@ export function CreateProfileForm() {
         updatedAt: serverTimestamp(),
       });
       await batch.commit();
+      profileSaved = true;
 
       setRegisteredEmail(email);
       setSubmitted(true);
     } catch (caught) {
+      if (createdUser && !profileSaved) {
+        try {
+          await deleteUser(createdUser);
+        } catch {
+          // If cleanup fails, the original Firebase error is still the useful one to show.
+        }
+      }
       setError(firebaseMessage(caught));
     } finally {
       setLoading(false);
