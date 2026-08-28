@@ -39,11 +39,11 @@ export default function Home() {
       <section className="section map-home-section">
         <div className="shell">
           <div className="section-head split-head compact-head">
-            <div><span className="eyebrow">MAPA DE NEGOCIOS</span><h2>Negocios reales, ubicaciones compartidas voluntariamente.</h2></div>
-            <p>El mapa muestra únicamente negocios y emprendimientos que decidieron marcar su ubicación. Los perfiles de talento no publican un punto exacto.</p>
+            <div><span className="eyebrow">MAPA DE UBICACIONES PÚBLICAS</span><h2>Personas y negocios que decidieron compartir dónde encontrarlos.</h2></div>
+            <p>El mapa solo muestra puntos exactos cuando el propietario activa voluntariamente la opción de hacer pública su ubicación. Si no la activa, el punto permanece privado.</p>
           </div>
           <RealMap compact />
-          <div className="map-home-footer"><div><MapPinned size={20} /><span><strong>Mapa real e interactivo</strong><small>Explorá negocios por ciudad y departamento.</small></span></div><Link href="/mapa" className="btn btn-primary">Abrir mapa completo <ArrowRight size={16} /></Link></div>
+          <div className="map-home-footer"><div><MapPinned size={20} /><span><strong>Mapa real e interactivo</strong><small>Explorá únicamente ubicaciones autorizadas por sus propietarios.</small></span></div><Link href="/mapa" className="btn btn-primary">Abrir mapa completo <ArrowRight size={16} /></Link></div>
         </div>
       </section>
 
