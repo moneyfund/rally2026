@@ -6,6 +6,7 @@ import "./brand.css";
 import "./firebase.css";
 import "./profile.css";
 import "./home-hero.css";
+import "./avatar.css";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 
