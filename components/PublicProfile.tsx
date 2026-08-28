@@ -11,6 +11,7 @@ import {
   MapPin,
   MessageCircle,
   Music2,
+  Navigation,
   Share2,
   UserRound,
 } from "lucide-react";
@@ -59,6 +60,12 @@ function externalUrl(value: string) {
   return /^https?:\/\//i.test(value) ? value : `https://${value}`;
 }
 
+function directionsUrl(profile: GerminaProfile) {
+  if (profile.kind !== "negocio" || !profile.coordinates) return "";
+  const { lat, lng } = profile.coordinates;
+  return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${lat},${lng}`)}`;
+}
+
 export function PublicProfile({ uid }: { uid: string }) {
   const [profile, setProfile] = useState<GerminaProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -92,6 +99,7 @@ export function PublicProfile({ uid }: { uid: string }) {
   }
 
   const whatsappUrl = nicaraguaWhatsappUrl(profile.socialLinks.whatsapp || profile.phone);
+  const mapsUrl = directionsUrl(profile);
 
   return (
     <main className="public-profile-page">
@@ -108,6 +116,7 @@ export function PublicProfile({ uid }: { uid: string }) {
           </div>
           <div className="public-profile-actions">
             {whatsappUrl ? <a className="btn btn-light btn-lg" href={whatsappUrl} target="_blank" rel="noreferrer"><MessageCircle size={18} /> WhatsApp</a> : null}
+            {mapsUrl ? <a className="btn btn-glass btn-lg" href={mapsUrl} target="_blank" rel="noreferrer"><Navigation size={18} /> Cómo llegar</a> : null}
             <button type="button" className="public-share-button" onClick={() => navigator.share?.({ title: profile.name, url: window.location.href })}><Share2 size={17} /></button>
           </div>
         </div>
@@ -124,22 +133,29 @@ export function PublicProfile({ uid }: { uid: string }) {
 
           {profile.portfolio.length ? <section className="public-profile-card"><div className="public-section-heading"><div><span className="eyebrow">PORTAFOLIO</span><h2>Trabajo y servicios</h2></div><span>{profile.portfolio.length} publicaciones</span></div><div className="public-portfolio-grid">{profile.portfolio.map((item) => <article key={item.id}><div className="public-portfolio-image"><img src={item.url} alt={item.title} /></div><div><strong>{item.title}</strong>{item.description ? <p>{item.description}</p> : null}</div></article>)}</div></section> : null}
 
-          {profile.coordinates ? <section className="public-profile-card"><div className="public-section-heading"><div><span className="eyebrow">UBICACIÓN</span><h2>{profile.location}</h2></div></div><ProfileLocationMap value={profile.coordinates} readOnly /></section> : null}
+          {profile.kind === "negocio" && profile.coordinates ? (
+            <section className="public-profile-card">
+              <div className="public-section-heading"><div><span className="eyebrow">UBICACIÓN DEL NEGOCIO</span><h2>{profile.location}</h2></div></div>
+              <ProfileLocationMap value={profile.coordinates} readOnly />
+              <div className="business-location-actions"><a href={mapsUrl} target="_blank" rel="noreferrer" className="btn btn-primary"><Navigation size={16} /> Abrir ruta en Google Maps</a></div>
+            </section>
+          ) : null}
         </div>
 
         <aside className="public-profile-aside">
           <section className="public-contact-card">
             <span className="eyebrow">CONECTÁ</span>
-            <h3>Encontrá este talento fuera de Germina.</h3>
+            <h3>{profile.kind === "negocio" ? "Encontrá este negocio fuera de Germina." : "Encontrá este talento fuera de Germina."}</h3>
             <div className="public-social-links">
               {profile.socialLinks.website ? <a href={externalUrl(profile.socialLinks.website)} target="_blank" rel="noreferrer"><Globe2 size={17} /><span>Sitio web</span><span>↗</span></a> : null}
               {profile.socialLinks.instagram ? <a href={externalUrl(profile.socialLinks.instagram)} target="_blank" rel="noreferrer"><Instagram size={17} /><span>Instagram</span><span>↗</span></a> : null}
               {profile.socialLinks.facebook ? <a href={externalUrl(profile.socialLinks.facebook)} target="_blank" rel="noreferrer"><AtSign size={17} /><span>Facebook</span><span>↗</span></a> : null}
               {profile.socialLinks.tiktok ? <a href={externalUrl(profile.socialLinks.tiktok)} target="_blank" rel="noreferrer"><Music2 size={17} /><span>TikTok</span><span>↗</span></a> : null}
               {whatsappUrl ? <a href={whatsappUrl} target="_blank" rel="noreferrer"><MessageCircle size={17} /><span>WhatsApp</span><span>↗</span></a> : null}
+              {mapsUrl ? <a href={mapsUrl} target="_blank" rel="noreferrer"><Navigation size={17} /><span>Cómo llegar</span><span>↗</span></a> : null}
             </div>
           </section>
-          <section className="public-profile-safety"><BadgeCheck size={18} /><div><strong>Perfil en Germina</strong><p>La documentación legal y datos privados nunca se muestran en esta página pública.</p></div></section>
+          <section className="public-profile-safety"><BadgeCheck size={18} /><div><strong>Privacidad en Germina</strong><p>La ubicación exacta en mapa solo se publica para negocios que la hayan marcado voluntariamente. Los talentos no muestran un punto preciso.</p></div></section>
         </aside>
       </div>
     </main>
