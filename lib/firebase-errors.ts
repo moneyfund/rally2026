@@ -19,6 +19,10 @@ export function firebaseMessage(error: unknown) {
     "auth/too-many-requests": "Demasiados intentos. Esperá un momento e intentá nuevamente.",
     "auth/network-request-failed": "No pudimos conectar con Firebase. Revisá tu conexión.",
     "permission-denied": "Firebase rechazó la operación. Revisá las reglas de Firestore.",
+    "storage/unauthorized": "No tenés permiso para acceder a este archivo. Revisá las reglas de Storage.",
+    "storage/canceled": "La subida del archivo fue cancelada.",
+    "storage/retry-limit-exceeded": "La subida tardó demasiado. Intentá nuevamente.",
+    "storage/unknown": "Firebase Storage devolvió un error inesperado. Intentá nuevamente.",
   };
 
   return messages[error.code] ?? `Firebase: ${error.code}`;
