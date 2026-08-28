@@ -14,6 +14,16 @@ service cloud.firestore {
       return signedIn() && request.auth.token.admin == true;
     }
 
+    function validProfileKind() {
+      return request.resource.data.kind == 'persona'
+        || request.resource.data.kind == 'negocio';
+    }
+
+    function validLocationPrivacy() {
+      return request.resource.data.kind == 'negocio'
+        || request.resource.data.coordinates == null;
+    }
+
     match /users/{uid} {
       allow read: if owns(uid) || isAdmin();
 
@@ -44,6 +54,8 @@ service cloud.firestore {
       allow create: if owns(uid)
         && request.resource.data.ownerId == uid
         && request.resource.data.verified == false
+        && validProfileKind()
+        && validLocationPrivacy()
         && request.resource.data.keys().hasOnly([
           'ownerId', 'kind', 'name', 'category', 'profession', 'headline',
           'description', 'location', 'coordinates', 'phone', 'socialLinks',
@@ -51,12 +63,18 @@ service cloud.firestore {
           'available', 'verified', 'status', 'createdAt', 'updatedAt'
         ]);
 
-      allow update: if isAdmin() || (
+      allow update: if (
+        isAdmin()
+        && validProfileKind()
+        && validLocationPrivacy()
+      ) || (
         owns(uid)
         && resource.data.ownerId == uid
         && request.resource.data.ownerId == uid
         && request.resource.data.ownerId == resource.data.ownerId
         && request.resource.data.verified == resource.data.verified
+        && validProfileKind()
+        && validLocationPrivacy()
         && request.resource.data.keys().hasOnly([
           'ownerId', 'kind', 'name', 'category', 'profession', 'headline',
           'description', 'location', 'coordinates', 'phone', 'socialLinks',
