@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { Sprout } from "lucide-react";
 
 export function SiteFooter() {
   return (
@@ -7,7 +6,7 @@ export function SiteFooter() {
       <div className="shell footer-grid">
         <div className="footer-brand-block">
           <Link href="/" className="brand brand-footer">
-            <span className="brand-mark"><Sprout size={20} strokeWidth={2.2} /></span>
+            <span className="brand-mark brand-mark-logo"><img src="/germina-logo.svg" alt="" /></span>
             <span className="brand-copy"><strong>GERMINA</strong><small>DONDE EL TALENTO CRECE</small></span>
           </Link>
           <p>Una plataforma para visibilizar habilidades, emprendimientos y oportunidades en Nicaragua.</p>
