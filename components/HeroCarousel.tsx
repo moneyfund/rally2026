@@ -65,9 +65,9 @@ export function HeroCarousel() {
         </div>
 
         <div className="hero-side-card">
-          <span className="hero-card-label">AHORA EN GERMINA</span>
-          <strong>Descubrí talento cerca de vos.</strong>
-          <p>Diseño, tecnología, fotografía, gastronomía, artesanía y servicios en todo Nicaragua.</p>
+          <span className="hero-card-label">MAPA DE NEGOCIOS</span>
+          <strong>Descubrí negocios y emprendimientos cerca de vos.</strong>
+          <p>Solo mostramos ubicaciones que cada negocio decidió marcar voluntariamente en Germina.</p>
           <Link href="/mapa">Explorar mapa <ArrowRight size={16} /></Link>
         </div>
       </div>
