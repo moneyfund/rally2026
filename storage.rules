@@ -2,9 +2,64 @@ rules_version = '2';
 
 service firebase.storage {
   match /b/{bucket}/o {
-    match /users/{uid}/{allPaths=**} {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function owns(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    function isAdmin() {
+      return signedIn() && request.auth.token.admin == true;
+    }
+
+    function isImage() {
+      return request.resource != null
+        && request.resource.contentType != null
+        && request.resource.contentType.matches('image/.*');
+    }
+
+    function isLegalFile() {
+      return request.resource != null
+        && request.resource.contentType != null
+        && (
+          request.resource.contentType == 'application/pdf'
+          || request.resource.contentType == 'image/jpeg'
+          || request.resource.contentType == 'image/png'
+        );
+    }
+
+    match /profiles/{uid}/avatar/{fileName} {
       allow read: if true;
-      allow write: if request.auth != null && request.auth.uid == uid;
+      allow create, update: if owns(uid)
+        && isImage()
+        && request.resource.size <= 5 * 1024 * 1024;
+      allow delete: if owns(uid);
+    }
+
+    match /profiles/{uid}/portfolio/{fileName} {
+      allow read: if true;
+      allow create, update: if owns(uid)
+        && isImage()
+        && request.resource.size <= 10 * 1024 * 1024;
+      allow delete: if owns(uid);
+    }
+
+    match /legal/{uid}/{fileName} {
+      allow read: if owns(uid) || isAdmin();
+      allow create, update: if owns(uid)
+        && isLegalFile()
+        && request.resource.size <= 15 * 1024 * 1024;
+      allow delete: if owns(uid);
+    }
+
+    match /businesses/{uid}/{fileName} {
+      allow read: if true;
+      allow create, update: if owns(uid)
+        && isImage()
+        && request.resource.size <= 10 * 1024 * 1024;
+      allow delete: if owns(uid);
     }
 
     match /{allPaths=**} {
