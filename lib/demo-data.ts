@@ -1,5 +1,6 @@
 export type TalentProfile = {
   id: number;
+  kind: "persona" | "negocio";
   name: string;
   role: string;
   category: string;
@@ -22,6 +23,7 @@ export const categories = ["Todos", "Diseño", "Tecnología", "Fotografía", "Ga
 export const profiles: TalentProfile[] = [
   {
     id: 1,
+    kind: "persona",
     name: "Andrea López",
     role: "Diseñadora de marca",
     category: "Diseño",
@@ -40,6 +42,7 @@ export const profiles: TalentProfile[] = [
   },
   {
     id: 2,
+    kind: "persona",
     name: "Carlos Mena",
     role: "Desarrollador web",
     category: "Tecnología",
@@ -58,6 +61,7 @@ export const profiles: TalentProfile[] = [
   },
   {
     id: 3,
+    kind: "persona",
     name: "Valeria Ruiz",
     role: "Fotógrafa & creadora",
     category: "Fotografía",
@@ -76,6 +80,7 @@ export const profiles: TalentProfile[] = [
   },
   {
     id: 4,
+    kind: "negocio",
     name: "Dulce Norte",
     role: "Repostería artesanal",
     category: "Gastronomía",
@@ -94,6 +99,7 @@ export const profiles: TalentProfile[] = [
   },
   {
     id: 5,
+    kind: "negocio",
     name: "Taller Güegüense",
     role: "Artesanía contemporánea",
     category: "Artesanía",
@@ -112,6 +118,7 @@ export const profiles: TalentProfile[] = [
   },
   {
     id: 6,
+    kind: "persona",
     name: "Samuel Pérez",
     role: "Barbero profesional",
     category: "Servicios",
@@ -130,6 +137,7 @@ export const profiles: TalentProfile[] = [
   },
   {
     id: 7,
+    kind: "negocio",
     name: "Mar Azul Studio",
     role: "Producción audiovisual",
     category: "Fotografía",
@@ -148,6 +156,7 @@ export const profiles: TalentProfile[] = [
   },
   {
     id: 8,
+    kind: "negocio",
     name: "Nica Digital Lab",
     role: "Marketing & contenido",
     category: "Tecnología",
