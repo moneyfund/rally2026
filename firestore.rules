@@ -19,9 +19,17 @@ service cloud.firestore {
         || request.resource.data.kind == 'negocio';
     }
 
-    function validLocationPrivacy() {
-      return request.resource.data.kind == 'negocio'
-        || request.resource.data.coordinates == null;
+    function validLocationConsent() {
+      return !('coordinates' in request.resource.data)
+        || request.resource.data.coordinates == null
+        || (
+          ('locationPublic' in request.resource.data)
+          && request.resource.data.locationPublic == true
+        )
+        || (
+          !('locationPublic' in request.resource.data)
+          && request.resource.data.kind == 'negocio'
+        );
     }
 
     match /users/{uid} {
@@ -46,6 +54,11 @@ service cloud.firestore {
         allow read: if owns(uid) || isAdmin();
         allow create, update, delete: if owns(uid);
       }
+
+      match /privateLocation/{documentId} {
+        allow read: if owns(uid) || isAdmin();
+        allow create, update, delete: if owns(uid) || isAdmin();
+      }
     }
 
     match /profiles/{uid} {
@@ -55,18 +68,19 @@ service cloud.firestore {
         && request.resource.data.ownerId == uid
         && request.resource.data.verified == false
         && validProfileKind()
-        && validLocationPrivacy()
+        && validLocationConsent()
         && request.resource.data.keys().hasOnly([
           'ownerId', 'kind', 'name', 'category', 'profession', 'headline',
-          'description', 'location', 'coordinates', 'phone', 'socialLinks',
-          'services', 'skills', 'avatarUrl', 'googlePhotoUrl', 'portfolio',
-          'available', 'verified', 'status', 'createdAt', 'updatedAt'
+          'description', 'location', 'coordinates', 'locationPublic', 'phone',
+          'socialLinks', 'services', 'skills', 'avatarUrl', 'googlePhotoUrl',
+          'coverUrl', 'portfolio', 'available', 'verified', 'status',
+          'createdAt', 'updatedAt'
         ]);
 
       allow update: if (
         isAdmin()
         && validProfileKind()
-        && validLocationPrivacy()
+        && validLocationConsent()
       ) || (
         owns(uid)
         && resource.data.ownerId == uid
@@ -74,12 +88,13 @@ service cloud.firestore {
         && request.resource.data.ownerId == resource.data.ownerId
         && request.resource.data.verified == resource.data.verified
         && validProfileKind()
-        && validLocationPrivacy()
+        && validLocationConsent()
         && request.resource.data.keys().hasOnly([
           'ownerId', 'kind', 'name', 'category', 'profession', 'headline',
-          'description', 'location', 'coordinates', 'phone', 'socialLinks',
-          'services', 'skills', 'avatarUrl', 'googlePhotoUrl', 'portfolio',
-          'available', 'verified', 'status', 'createdAt', 'updatedAt'
+          'description', 'location', 'coordinates', 'locationPublic', 'phone',
+          'socialLinks', 'services', 'skills', 'avatarUrl', 'googlePhotoUrl',
+          'coverUrl', 'portfolio', 'available', 'verified', 'status',
+          'createdAt', 'updatedAt'
         ])
       );
 
