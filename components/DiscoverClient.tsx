@@ -7,6 +7,11 @@ import { categories, profiles, type TalentProfile } from "@/lib/demo-data";
 import { db } from "@/lib/firebase";
 import { TalentCard } from "@/components/TalentCard";
 
+type DiscoverProfile = TalentProfile & {
+  uid?: string;
+  avatarUrl?: string;
+};
+
 function initialsFrom(name: string) {
   return name
     .split(/\s+/)
@@ -19,13 +24,13 @@ function initialsFrom(name: string) {
 export function DiscoverClient() {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("Todos");
-  const [liveProfiles, setLiveProfiles] = useState<TalentProfile[]>([]);
+  const [liveProfiles, setLiveProfiles] = useState<DiscoverProfile[]>([]);
 
   useEffect(() => {
     const unsubscribe = onSnapshot(
       collection(db, "profiles"),
       (snapshot) => {
-        const items: TalentProfile[] = [];
+        const items: DiscoverProfile[] = [];
 
         snapshot.docs.forEach((snapshotDoc, index) => {
           const data = snapshotDoc.data();
@@ -33,15 +38,20 @@ export function DiscoverClient() {
 
           const name = String(data.name ?? "Perfil Germina");
           const location = String(data.location ?? "Nicaragua");
+          const rawCoords = data.coordinates && typeof data.coordinates === "object" ? data.coordinates as Record<string, unknown> : null;
+          const services = Array.isArray(data.services) ? data.services.map(String) : Array.isArray(data.skills) ? data.skills.map(String) : [];
+
           items.push({
             id: 10000 + index,
+            uid: snapshotDoc.id,
+            avatarUrl: String(data.avatarUrl ?? data.googlePhotoUrl ?? ""),
             name,
-            role: String(data.headline ?? data.category ?? "Talento Germina"),
+            role: String(data.profession ?? data.headline ?? data.category ?? "Talento Germina"),
             category: String(data.category ?? "Servicios"),
             location,
             department: location,
             description: String(data.description ?? "Perfil creado en Germina."),
-            skills: Array.isArray(data.skills) ? data.skills.map(String) : [],
+            skills: services,
             rating: 0,
             reviews: 0,
             verified: Boolean(data.verified),
@@ -49,14 +59,15 @@ export function DiscoverClient() {
             initials: initialsFrom(name),
             accent: "linear-gradient(135deg, #071d36, #315d89)",
             mapPosition: { x: 0, y: 0 },
-            coordinates: { lat: 12.114, lng: -86.236 },
+            coordinates: rawCoords && typeof rawCoords.lat === "number" && typeof rawCoords.lng === "number"
+              ? { lat: rawCoords.lat, lng: rawCoords.lng }
+              : { lat: 12.114, lng: -86.236 },
           });
         });
 
         setLiveProfiles(items);
       },
       () => {
-        // Keep the demo profiles available until Firestore rules are published.
         setLiveProfiles([]);
       },
     );
@@ -64,7 +75,7 @@ export function DiscoverClient() {
     return unsubscribe;
   }, []);
 
-  const allProfiles = useMemo(() => [...liveProfiles, ...profiles], [liveProfiles]);
+  const allProfiles = useMemo<DiscoverProfile[]>(() => [...liveProfiles, ...profiles], [liveProfiles]);
 
   const results = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -83,7 +94,7 @@ export function DiscoverClient() {
       </div>
       <div className="category-tabs">{categories.map((item) => <button type="button" key={item} onClick={() => setCategory(item)} className={category === item ? "active" : ""}>{item}</button>)}</div>
       <div className="result-meta"><strong>{results.length} perfiles</strong><span>{liveProfiles.length ? `${liveProfiles.length} perfiles reales de Firestore + demostración` : "Talento y emprendimientos de demostración"}</span></div>
-      {results.length ? <div className="talent-grid">{results.map((profile) => <TalentCard profile={profile} key={`${profile.id}-${profile.name}`} />)}</div> : <div className="empty-panel"><Search size={28} /><h3>No encontramos coincidencias</h3><p>Probá con otra habilidad o categoría.</p></div>}
+      {results.length ? <div className="talent-grid">{results.map((profile) => <TalentCard profile={profile} key={`${profile.id}-${profile.name}`} href={profile.uid ? `/perfil/${profile.uid}` : undefined} avatarUrl={profile.avatarUrl} />)}</div> : <div className="empty-panel"><Search size={28} /><h3>No encontramos coincidencias</h3><p>Probá con otra habilidad o categoría.</p></div>}
     </div>
   );
 }
