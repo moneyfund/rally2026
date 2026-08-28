@@ -51,7 +51,6 @@ export function HeroCarousel() {
         ))}
       </div>
       <div className="hero-shade" />
-      <div className="hero-grid-lines" />
 
       <div className="shell hero-content">
         <div className="hero-copy">
