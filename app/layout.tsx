@@ -5,6 +5,7 @@ import "./globals.css";
 import "./brand.css";
 import "./firebase.css";
 import "./profile.css";
+import "./home-hero.css";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 
