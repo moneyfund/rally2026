@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ArrowRight, Menu, UserRound, X } from "lucide-react";
+import { ArrowRight, Menu, ShieldCheck, UserRound, X } from "lucide-react";
 import { onAuthStateChanged, type User } from "firebase/auth";
 import { useEffect, useState } from "react";
 import { auth } from "@/lib/firebase";
+
+const ADMIN_EMAIL = "norvingarcia220@gmail.com";
 
 const navItems = [
   { href: "/descubrir", label: "Descubrir" },
@@ -37,10 +39,14 @@ export function SiteHeader() {
 
   useEffect(() => setOpen(false), [pathname]);
 
+  const isAdminUser = (user?.email ?? "").trim().toLowerCase() === ADMIN_EMAIL;
+
   const accountLink = user ? (
-    <Link href="/mi-perfil" className="header-account" onClick={() => setOpen(false)}>
-      <span className="header-account-avatar">{user.photoURL ? <img src={user.photoURL} alt="" /> : <UserRound size={16} />}</span>
-      <span>Mi perfil</span>
+    <Link href={isAdminUser ? "/admin" : "/mi-perfil"} className="header-account" onClick={() => setOpen(false)}>
+      <span className="header-account-avatar">
+        {user.photoURL ? <img src={user.photoURL} alt="" /> : isAdminUser ? <ShieldCheck size={16} /> : <UserRound size={16} />}
+      </span>
+      <span>{isAdminUser ? "Administración" : "Mi perfil"}</span>
     </Link>
   ) : null;
 

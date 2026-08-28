@@ -10,6 +10,12 @@ import { auth, db } from "@/lib/firebase";
 import { firebaseMessage } from "@/lib/firebase-errors";
 import { signInWithGoogle } from "@/lib/google-auth";
 
+const ADMIN_EMAIL = "norvingarcia220@gmail.com";
+
+function isAdminEmail(email: string | null | undefined) {
+  return (email ?? "").trim().toLowerCase() === ADMIN_EMAIL;
+}
+
 export function LoginForm() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -17,8 +23,14 @@ export function LoginForm() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
 
-  async function completeSignIn(uid: string) {
-    const profile = await getDoc(doc(db, "profiles", uid));
+  async function completeSignIn(user: { uid: string; email: string | null }) {
+    if (isAdminEmail(user.email)) {
+      router.replace("/admin");
+      router.refresh();
+      return;
+    }
+
+    const profile = await getDoc(doc(db, "profiles", user.uid));
     if (!profile.exists()) {
       router.push("/crear-perfil?google=1");
       return;
@@ -37,7 +49,7 @@ export function LoginForm() {
 
     try {
       const credential = await signInWithEmailAndPassword(auth, email, password);
-      await completeSignIn(credential.user.uid);
+      await completeSignIn(credential.user);
     } catch (caught) {
       setError(firebaseMessage(caught));
     } finally {
@@ -50,7 +62,7 @@ export function LoginForm() {
     setGoogleLoading(true);
     try {
       const user = await signInWithGoogle();
-      await completeSignIn(user.uid);
+      await completeSignIn(user);
     } catch (caught) {
       setError(firebaseMessage(caught));
     } finally {
