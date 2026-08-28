@@ -1,41 +1,49 @@
 "use client";
 
-import L from "leaflet";
 import { useEffect, useRef, useState } from "react";
 import { BadgeCheck, MapPin, Navigation, Star } from "lucide-react";
 import { profiles, type TalentProfile } from "@/lib/demo-data";
 
 export function RealMap({ compact = false }: { compact?: boolean }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const mapRef = useRef<L.Map | null>(null);
+  const mapRef = useRef<import("leaflet").Map | null>(null);
   const [selected, setSelected] = useState<TalentProfile>(profiles[0]);
 
   useEffect(() => {
-    if (!containerRef.current || mapRef.current) return;
+    let cancelled = false;
 
-    const map = L.map(containerRef.current, { scrollWheelZoom: !compact, zoomControl: true }).setView([12.55, -85.65], compact ? 6 : 7);
-    mapRef.current = map;
+    async function setupMap() {
+      if (!containerRef.current || mapRef.current) return;
+      const L = await import("leaflet");
+      if (cancelled || !containerRef.current) return;
 
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      maxZoom: 18,
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-    }).addTo(map);
+      const map = L.map(containerRef.current, { scrollWheelZoom: !compact, zoomControl: true }).setView([12.55, -85.65], compact ? 6 : 7);
+      mapRef.current = map;
 
-    profiles.forEach((profile) => {
-      const marker = L.circleMarker([profile.coordinates.lat, profile.coordinates.lng], {
-        radius: compact ? 8 : 10,
-        color: "#ffffff",
-        weight: 3,
-        fillColor: "#0a2747",
-        fillOpacity: 1,
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 18,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
       }).addTo(map);
 
-      marker.bindTooltip(profile.name, { direction: "top", offset: [0, -10] });
-      marker.on("click", () => setSelected(profile));
-    });
+      profiles.forEach((profile) => {
+        const marker = L.circleMarker([profile.coordinates.lat, profile.coordinates.lng], {
+          radius: compact ? 8 : 10,
+          color: "#ffffff",
+          weight: 3,
+          fillColor: "#0a2747",
+          fillOpacity: 1,
+        }).addTo(map);
+
+        marker.bindTooltip(profile.name, { direction: "top", offset: [0, -10] });
+        marker.on("click", () => setSelected(profile));
+      });
+    }
+
+    setupMap();
 
     return () => {
-      map.remove();
+      cancelled = true;
+      mapRef.current?.remove();
       mapRef.current = null;
     };
   }, [compact]);
