@@ -1,9 +1,21 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { BadgeCheck, ChevronDown, MapPin, Navigation, RotateCcw, Search, SlidersHorizontal, Star } from "lucide-react";
+import { collection, onSnapshot } from "firebase/firestore";
 import { categories, profiles, type TalentProfile } from "@/lib/demo-data";
+import { db } from "@/lib/firebase";
 import styles from "./RealMap.module.css";
+
+type MapProfile = TalentProfile & {
+  uid?: string;
+  avatarUrl?: string;
+};
+
+function initialsFrom(name: string) {
+  return name.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase()).join("") || "G";
+}
 
 export function RealMap({ compact = false }: { compact?: boolean }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -11,21 +23,61 @@ export function RealMap({ compact = false }: { compact?: boolean }) {
   const leafletRef = useRef<typeof import("leaflet") | null>(null);
   const markerGroupRef = useRef<import("leaflet").LayerGroup | null>(null);
   const [mapReady, setMapReady] = useState(false);
-  const [selected, setSelected] = useState<TalentProfile | null>(profiles[0]);
+  const [liveProfiles, setLiveProfiles] = useState<MapProfile[]>([]);
+  const [selected, setSelected] = useState<MapProfile | null>(profiles[0]);
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("Todos");
   const [department, setDepartment] = useState("Todos");
   const [availableOnly, setAvailableOnly] = useState(false);
 
+  useEffect(() => {
+    return onSnapshot(collection(db, "profiles"), (snapshot) => {
+      const items: MapProfile[] = [];
+      snapshot.docs.forEach((snapshotDoc, index) => {
+        const data = snapshotDoc.data();
+        if (data.status && data.status !== "active") return;
+        const coords = data.coordinates && typeof data.coordinates === "object" ? data.coordinates as Record<string, unknown> : null;
+        if (!coords || typeof coords.lat !== "number" || typeof coords.lng !== "number") return;
+
+        const name = String(data.name ?? "Perfil Germina");
+        const location = String(data.location ?? "Nicaragua");
+        const services = Array.isArray(data.services) ? data.services.map(String) : Array.isArray(data.skills) ? data.skills.map(String) : [];
+        items.push({
+          id: 20000 + index,
+          uid: snapshotDoc.id,
+          avatarUrl: String(data.avatarUrl ?? data.googlePhotoUrl ?? ""),
+          name,
+          role: String(data.profession ?? data.headline ?? data.category ?? "Talento Germina"),
+          category: String(data.category ?? "Servicios"),
+          location,
+          department: location,
+          description: String(data.description ?? "Perfil creado en Germina."),
+          skills: services,
+          rating: 0,
+          reviews: 0,
+          verified: Boolean(data.verified),
+          available: data.available !== false,
+          initials: initialsFrom(name),
+          accent: "linear-gradient(135deg, #071d36, #315d89)",
+          mapPosition: { x: 0, y: 0 },
+          coordinates: { lat: coords.lat, lng: coords.lng },
+        });
+      });
+      setLiveProfiles(items);
+    }, () => setLiveProfiles([]));
+  }, []);
+
+  const allProfiles = useMemo<MapProfile[]>(() => [...liveProfiles, ...profiles], [liveProfiles]);
+
   const departments = useMemo(
-    () => ["Todos", ...Array.from(new Set(profiles.map((profile) => profile.department)))],
-    [],
+    () => ["Todos", ...Array.from(new Set(allProfiles.map((profile) => profile.department)))],
+    [allProfiles],
   );
 
   const filteredProfiles = useMemo(() => {
     const normalized = query.trim().toLowerCase();
 
-    return profiles.filter((profile) => {
+    return allProfiles.filter((profile) => {
       const haystack = `${profile.name} ${profile.role} ${profile.category} ${profile.location} ${profile.department} ${profile.skills.join(" ")}`.toLowerCase();
       const matchesQuery = !normalized || haystack.includes(normalized);
       const matchesCategory = category === "Todos" || profile.category === category;
@@ -34,7 +86,7 @@ export function RealMap({ compact = false }: { compact?: boolean }) {
 
       return matchesQuery && matchesCategory && matchesDepartment && matchesAvailability;
     });
-  }, [availableOnly, category, department, query]);
+  }, [allProfiles, availableOnly, category, department, query]);
 
   const filtersActive = query.trim() !== "" || category !== "Todos" || department !== "Todos" || availableOnly;
 
@@ -89,7 +141,7 @@ export function RealMap({ compact = false }: { compact?: boolean }) {
         radius: compact ? 8 : 10,
         color: "#ffffff",
         weight: 3,
-        fillColor: "#0a2747",
+        fillColor: profile.uid ? "#176293" : "#0a2747",
         fillOpacity: 1,
       }).addTo(markerGroup);
 
@@ -134,12 +186,7 @@ export function RealMap({ compact = false }: { compact?: boolean }) {
           <div className={styles.filterBar}>
             <label className={styles.searchField}>
               <Search size={18} />
-              <input
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder="Buscar habilidad, negocio o persona"
-                aria-label="Buscar talento en el mapa"
-              />
+              <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar habilidad, negocio o persona" aria-label="Buscar talento en el mapa" />
             </label>
 
             <label className={styles.selectField}>
@@ -158,20 +205,11 @@ export function RealMap({ compact = false }: { compact?: boolean }) {
               <ChevronDown size={14} />
             </label>
 
-            <button
-              type="button"
-              className={`${styles.availabilityButton} ${availableOnly ? styles.availabilityButtonActive : ""}`}
-              onClick={() => setAvailableOnly((value) => !value)}
-              aria-pressed={availableOnly}
-            >
+            <button type="button" className={`${styles.availabilityButton} ${availableOnly ? styles.availabilityButtonActive : ""}`} onClick={() => setAvailableOnly((value) => !value)} aria-pressed={availableOnly}>
               <span className={styles.statusDot} /> Disponibles
             </button>
 
-            {filtersActive ? (
-              <button type="button" className={styles.resetButton} onClick={resetFilters} aria-label="Limpiar filtros">
-                <RotateCcw size={16} />
-              </button>
-            ) : null}
+            {filtersActive ? <button type="button" className={styles.resetButton} onClick={resetFilters} aria-label="Limpiar filtros"><RotateCcw size={16} /></button> : null}
           </div>
         </div>
       ) : null}
@@ -183,16 +221,16 @@ export function RealMap({ compact = false }: { compact?: boolean }) {
           <aside className={`map-profile-panel ${styles.profilePanel}`}>
             {selected ? (
               <>
-                <span className="map-panel-kicker"><Navigation size={15} /> PERFIL SELECCIONADO</span>
+                <span className="map-panel-kicker"><Navigation size={15} /> {selected.uid ? "PERFIL REAL" : "PERFIL SELECCIONADO"}</span>
                 <div className="map-profile-head">
-                  <div className="talent-avatar" style={{ background: selected.accent }}>{selected.initials}</div>
+                  <div className="talent-avatar" style={selected.avatarUrl ? undefined : { background: selected.accent }}>{selected.avatarUrl ? <img src={selected.avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "inherit" }} /> : selected.initials}</div>
                   <div><div className="talent-title-row"><h3>{selected.name}</h3>{selected.verified ? <BadgeCheck size={17} /> : null}</div><p>{selected.role}</p></div>
                 </div>
                 <span className="talent-location"><MapPin size={14} /> {selected.location}, Nicaragua</span>
                 <p className="map-profile-copy">{selected.description}</p>
                 <div className="skill-row">{selected.skills.map((skill) => <span key={skill}>{skill}</span>)}</div>
                 <div className="map-profile-score"><span><Star size={15} fill="currentColor" /> {selected.rating.toFixed(1)}</span><span>{selected.reviews} reseñas</span></div>
-                <button type="button" className="btn btn-primary map-contact">Ver perfil completo</button>
+                {selected.uid ? <Link href={`/perfil/${selected.uid}`} className="btn btn-primary map-contact">Ver perfil completo</Link> : <button type="button" className="btn btn-primary map-contact">Ver perfil completo</button>}
               </>
             ) : (
               <div className={styles.emptyPanel}>
