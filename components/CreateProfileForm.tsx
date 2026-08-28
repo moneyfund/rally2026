@@ -24,7 +24,7 @@ export function CreateProfileForm() {
       if (!user || !user.providerData.some((provider) => provider.providerId === "google.com")) return;
       const existingProfile = await getDoc(doc(db, "profiles", user.uid));
       if (existingProfile.exists()) {
-        window.location.replace("/descubrir");
+        window.location.replace("/mi-perfil");
         return;
       }
       setGoogleUser(user);
@@ -41,7 +41,7 @@ export function CreateProfileForm() {
       const user = await signInWithGoogle();
       const existingProfile = await getDoc(doc(db, "profiles", user.uid));
       if (existingProfile.exists()) {
-        window.location.assign("/descubrir");
+        window.location.assign("/mi-perfil");
         return;
       }
       setGoogleUser(user);
@@ -126,11 +126,23 @@ export function CreateProfileForm() {
         kind,
         name,
         category,
+        profession: headline,
         location,
         phone,
         headline,
         description,
         skills,
+        services: skills,
+        socialLinks: {
+          website: "",
+          whatsapp: phone,
+          facebook: "",
+          instagram: "",
+          tiktok: "",
+        },
+        avatarUrl: "",
+        googlePhotoUrl: user.photoURL ?? "",
+        portfolio: [],
         available: true,
         verified: false,
         status: "active",
@@ -163,7 +175,7 @@ export function CreateProfileForm() {
         <CheckCircle2 size={42} />
         <h2>Tu cuenta de Germina está lista.</h2>
         <p>Tu acceso <strong>{registeredEmail}</strong> quedó conectado y tu perfil fue guardado en Firestore.</p>
-        <a className="btn btn-primary" href="/descubrir">Explorar Germina</a>
+        <a className="btn btn-primary" href="/mi-perfil">Completar mi perfil</a>
       </div>
     );
   }
