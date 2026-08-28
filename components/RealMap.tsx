@@ -27,10 +27,10 @@ function directionsUrl(profile: MapProfile) {
 function sproutIcon(L: typeof import("leaflet")) {
   return L.divIcon({
     className: "germina-plant-marker",
-    iconSize: [34, 42],
-    iconAnchor: [17, 38],
+    iconSize: [30, 38],
+    iconAnchor: [15, 38],
     tooltipAnchor: [0, -34],
-    html: `<span class="germina-plant-marker-inner" aria-hidden="true"><svg viewBox="0 0 32 36" role="presentation"><path d="M16 31V15"/><path d="M16 18C11 18 7 14 7 9c5 0 9 3 9 9Z"/><path d="M16 14c1-6 5-9 11-9 0 6-4 10-11 9Z"/><path d="M11 31h10"/></svg></span>`,
+    html: `<span class="germina-plant-marker-inner" aria-hidden="true"><svg viewBox="0 0 40 50" role="presentation" xmlns="http://www.w3.org/2000/svg"><path d="M20 2C11.16 2 4 9.16 4 18c0 12.16 14.08 26.7 15.1 27.73a1.3 1.3 0 0 0 1.8 0C21.92 44.7 36 30.16 36 18 36 9.16 28.84 2 20 2Z" fill="#3B5263"/><path d="M20 25c-1.3-4.1.55-8.1 5.05-10.4.5 3.85-1.3 7.15-5.05 10.4Zm0 0c-3.9-1.6-6.1-4.45-6.5-9.05 4 .65 6.4 3.05 6.5 9.05Zm0 0v4.3" fill="none" stroke="#FFFFFF" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`,
   });
 }
 
