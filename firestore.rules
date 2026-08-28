@@ -32,6 +32,16 @@ service cloud.firestore {
         );
     }
 
+    function adminProfileFieldsUnchanged() {
+      return request.resource.data.verified == resource.data.verified
+        && request.resource.data.get('verificationStatus', 'pending') == resource.data.get('verificationStatus', 'pending')
+        && request.resource.data.get('verificationNote', '') == resource.data.get('verificationNote', '')
+        && request.resource.data.get('verificationReviewedAt', null) == resource.data.get('verificationReviewedAt', null)
+        && request.resource.data.get('verificationReviewedBy', '') == resource.data.get('verificationReviewedBy', '')
+        && request.resource.data.get('partner', false) == resource.data.get('partner', false)
+        && request.resource.data.get('partnerSince', null) == resource.data.get('partnerSince', null);
+    }
+
     match /users/{uid} {
       allow read: if owns(uid) || isAdmin();
 
@@ -61,12 +71,19 @@ service cloud.firestore {
       }
     }
 
+    match /{path=**}/legalDocuments/{documentId} {
+      allow read: if isAdmin();
+    }
+
     match /profiles/{uid} {
-      allow read: if true;
+      allow read: if isAdmin() || owns(uid) || resource.data.verified == true;
 
       allow create: if owns(uid)
         && request.resource.data.ownerId == uid
         && request.resource.data.verified == false
+        && request.resource.data.get('verificationStatus', 'pending') == 'pending'
+        && request.resource.data.get('verificationNote', '') == ''
+        && request.resource.data.get('partner', false) == false
         && validProfileKind()
         && validLocationConsent()
         && request.resource.data.keys().hasOnly([
@@ -74,6 +91,8 @@ service cloud.firestore {
           'description', 'location', 'coordinates', 'locationPublic', 'phone',
           'socialLinks', 'services', 'skills', 'avatarUrl', 'googlePhotoUrl',
           'coverUrl', 'portfolio', 'available', 'verified', 'status',
+          'verificationStatus', 'verificationNote', 'verificationReviewedAt',
+          'verificationReviewedBy', 'partner', 'partnerSince',
           'createdAt', 'updatedAt'
         ]);
 
@@ -86,7 +105,7 @@ service cloud.firestore {
         && resource.data.ownerId == uid
         && request.resource.data.ownerId == uid
         && request.resource.data.ownerId == resource.data.ownerId
-        && request.resource.data.verified == resource.data.verified
+        && adminProfileFieldsUnchanged()
         && validProfileKind()
         && validLocationConsent()
         && request.resource.data.keys().hasOnly([
@@ -94,6 +113,8 @@ service cloud.firestore {
           'description', 'location', 'coordinates', 'locationPublic', 'phone',
           'socialLinks', 'services', 'skills', 'avatarUrl', 'googlePhotoUrl',
           'coverUrl', 'portfolio', 'available', 'verified', 'status',
+          'verificationStatus', 'verificationNote', 'verificationReviewedAt',
+          'verificationReviewedBy', 'partner', 'partnerSince',
           'createdAt', 'updatedAt'
         ])
       );

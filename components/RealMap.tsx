@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { BadgeCheck, ChevronDown, MapPin, Navigation, RotateCcw, Search, SlidersHorizontal, Star } from "lucide-react";
-import { collection, onSnapshot } from "firebase/firestore";
+import { collection, onSnapshot, query as firestoreQuery, where } from "firebase/firestore";
 import { categories, profiles, type TalentProfile } from "@/lib/demo-data";
 import { db } from "@/lib/firebase";
 import styles from "./RealMap.module.css";
@@ -48,7 +48,8 @@ export function RealMap({ compact = false }: { compact?: boolean }) {
   const [availableOnly, setAvailableOnly] = useState(false);
 
   useEffect(() => {
-    return onSnapshot(collection(db, "profiles"), (snapshot) => {
+    const publicProfilesQuery = firestoreQuery(collection(db, "profiles"), where("verified", "==", true));
+    return onSnapshot(publicProfilesQuery, (snapshot) => {
       const items: MapProfile[] = [];
       snapshot.docs.forEach((snapshotDoc, index) => {
         const data = snapshotDoc.data();

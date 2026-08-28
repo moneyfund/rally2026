@@ -1,7 +1,7 @@
 "use client";
 
 import { Search, SlidersHorizontal } from "lucide-react";
-import { collection, onSnapshot } from "firebase/firestore";
+import { collection, onSnapshot, query as firestoreQuery, where } from "firebase/firestore";
 import { useEffect, useMemo, useState } from "react";
 import { categories, profiles, type TalentProfile } from "@/lib/demo-data";
 import { db } from "@/lib/firebase";
@@ -27,8 +27,9 @@ export function DiscoverClient() {
   const [liveProfiles, setLiveProfiles] = useState<DiscoverProfile[]>([]);
 
   useEffect(() => {
+    const publicProfilesQuery = firestoreQuery(collection(db, "profiles"), where("verified", "==", true));
     const unsubscribe = onSnapshot(
-      collection(db, "profiles"),
+      publicProfilesQuery,
       (snapshot) => {
         const items: DiscoverProfile[] = [];
 
