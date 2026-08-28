@@ -63,8 +63,8 @@ export function LoginForm() {
       <div className="auth-success">
         <CheckCircle2 size={38} />
         <h2>Sesión iniciada.</h2>
-        <p>Ya podés administrar tu cuenta de Germina.</p>
-        <Link href="/descubrir" className="btn btn-primary btn-lg">Continuar a Germina <ArrowRight size={18} /></Link>
+        <p>Ya podés administrar tu cuenta y tu perfil de Germina.</p>
+        <Link href="/mi-perfil" className="btn btn-primary btn-lg">Ir a mi perfil <ArrowRight size={18} /></Link>
       </div>
     );
   }
