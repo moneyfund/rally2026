@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import {
+  AtSign,
   BadgeCheck,
   BriefcaseBusiness,
-  Facebook,
   Globe2,
   Instagram,
   LoaderCircle,
@@ -133,7 +133,7 @@ export function PublicProfile({ uid }: { uid: string }) {
             <div className="public-social-links">
               {profile.socialLinks.website ? <a href={externalUrl(profile.socialLinks.website)} target="_blank" rel="noreferrer"><Globe2 size={17} /><span>Sitio web</span><span>↗</span></a> : null}
               {profile.socialLinks.instagram ? <a href={externalUrl(profile.socialLinks.instagram)} target="_blank" rel="noreferrer"><Instagram size={17} /><span>Instagram</span><span>↗</span></a> : null}
-              {profile.socialLinks.facebook ? <a href={externalUrl(profile.socialLinks.facebook)} target="_blank" rel="noreferrer"><Facebook size={17} /><span>Facebook</span><span>↗</span></a> : null}
+              {profile.socialLinks.facebook ? <a href={externalUrl(profile.socialLinks.facebook)} target="_blank" rel="noreferrer"><AtSign size={17} /><span>Facebook</span><span>↗</span></a> : null}
               {profile.socialLinks.tiktok ? <a href={externalUrl(profile.socialLinks.tiktok)} target="_blank" rel="noreferrer"><Music2 size={17} /><span>TikTok</span><span>↗</span></a> : null}
               {whatsappDigits ? <a href={`https://wa.me/${whatsappDigits}`} target="_blank" rel="noreferrer"><MessageCircle size={17} /><span>WhatsApp</span><span>↗</span></a> : null}
             </div>
