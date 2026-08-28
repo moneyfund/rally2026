@@ -10,6 +10,8 @@ export function firebaseMessage(error: unknown) {
     "auth/invalid-credential": "Correo o contraseña incorrectos.",
     "auth/user-disabled": "Esta cuenta está deshabilitada.",
     "auth/operation-not-allowed": "Activá el proveedor Email/Password en Firebase Authentication.",
+    "auth/configuration-not-found": "Terminá de configurar Firebase Authentication en la consola de Firebase.",
+    "auth/unauthorized-domain": "Agregá rally-nicaragua-2026.vercel.app a los dominios autorizados de Firebase Authentication.",
     "auth/too-many-requests": "Demasiados intentos. Esperá un momento e intentá nuevamente.",
     "auth/network-request-failed": "No pudimos conectar con Firebase. Revisá tu conexión.",
     "permission-denied": "Firebase rechazó la operación. Revisá las reglas de Firestore.",
