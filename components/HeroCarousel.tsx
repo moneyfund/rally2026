@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, ChevronLeft, ChevronRight, MapPin, Search, Sparkles } from "lucide-react";
+import { ArrowRight, ChevronDown, ChevronLeft, ChevronRight, MapPin, Search, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 
 const slides = [
@@ -40,7 +40,7 @@ export function HeroCarousel() {
   };
 
   return (
-    <section className="photo-hero">
+    <section className="photo-hero home-fullscreen-hero">
       <div className="hero-slides" aria-hidden="true">
         {slides.map((slide, index) => (
           <div
@@ -80,6 +80,11 @@ export function HeroCarousel() {
           <button type="button" onClick={() => go(1)} aria-label="Foto siguiente"><ChevronRight size={19} /></button>
         </div>
       </div>
+
+      <a className="hero-scroll-cue" href="#inicio-contenido" aria-label="Deslizar hacia el contenido">
+        <span>DESLIZÁ PARA DESCUBRIR</span>
+        <span className="hero-scroll-arrows" aria-hidden="true"><ChevronDown size={17} /><ChevronDown size={17} /></span>
+      </a>
     </section>
   );
 }
