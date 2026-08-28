@@ -17,6 +17,10 @@ service cloud.firestore {
       );
     }
 
+    function isLegacyPublicProfile() {
+      return resource.data.createdAt < timestamp.value('2026-08-28T22:51:00Z');
+    }
+
     function validProfileKind() {
       return request.resource.data.kind == 'persona'
         || request.resource.data.kind == 'negocio';
@@ -79,7 +83,10 @@ service cloud.firestore {
     }
 
     match /profiles/{uid} {
-      allow read: if isAdmin() || owns(uid) || resource.data.verified == true;
+      allow read: if isAdmin()
+        || owns(uid)
+        || resource.data.verified == true
+        || isLegacyPublicProfile();
 
       allow create: if owns(uid)
         && request.resource.data.ownerId == uid
