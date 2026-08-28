@@ -14,17 +14,10 @@ export type TalentProfile = {
   initials: string;
   accent: string;
   mapPosition: { x: number; y: number };
+  coordinates: { lat: number; lng: number };
 };
 
-export const categories = [
-  "Todos",
-  "Diseño",
-  "Tecnología",
-  "Fotografía",
-  "Gastronomía",
-  "Artesanía",
-  "Servicios",
-];
+export const categories = ["Todos", "Diseño", "Tecnología", "Fotografía", "Gastronomía", "Artesanía", "Servicios"];
 
 export const profiles: TalentProfile[] = [
   {
@@ -41,8 +34,9 @@ export const profiles: TalentProfile[] = [
     verified: true,
     available: true,
     initials: "AL",
-    accent: "linear-gradient(135deg, #0b2b50, #2864a8)",
+    accent: "linear-gradient(135deg, #071d36, #1f5b92)",
     mapPosition: { x: 51, y: 59 },
+    coordinates: { lat: 12.11499, lng: -86.23617 },
   },
   {
     id: 2,
@@ -60,6 +54,7 @@ export const profiles: TalentProfile[] = [
     initials: "CM",
     accent: "linear-gradient(135deg, #061a33, #174b80)",
     mapPosition: { x: 32, y: 46 },
+    coordinates: { lat: 12.43556, lng: -86.87944 },
   },
   {
     id: 3,
@@ -77,6 +72,7 @@ export const profiles: TalentProfile[] = [
     initials: "VR",
     accent: "linear-gradient(135deg, #15395f, #4e7ca8)",
     mapPosition: { x: 63, y: 65 },
+    coordinates: { lat: 11.92988, lng: -85.95602 },
   },
   {
     id: 4,
@@ -94,6 +90,7 @@ export const profiles: TalentProfile[] = [
     initials: "DN",
     accent: "linear-gradient(135deg, #0d2847, #315d89)",
     mapPosition: { x: 49, y: 29 },
+    coordinates: { lat: 13.09185, lng: -86.35384 },
   },
   {
     id: 5,
@@ -111,6 +108,7 @@ export const profiles: TalentProfile[] = [
     initials: "TG",
     accent: "linear-gradient(135deg, #102c4c, #557899)",
     mapPosition: { x: 59, y: 61 },
+    coordinates: { lat: 11.97444, lng: -86.09417 },
   },
   {
     id: 6,
@@ -128,11 +126,48 @@ export const profiles: TalentProfile[] = [
     initials: "SP",
     accent: "linear-gradient(135deg, #071b34, #386288)",
     mapPosition: { x: 60, y: 36 },
+    coordinates: { lat: 12.92559, lng: -85.91747 },
+  },
+  {
+    id: 7,
+    name: "Mar Azul Studio",
+    role: "Producción audiovisual",
+    category: "Fotografía",
+    location: "Rivas",
+    department: "Rivas",
+    description: "Contenido audiovisual para turismo, hoteles y marcas que quieren comunicar desde el Pacífico de Nicaragua.",
+    skills: ["Drone", "Video", "Edición"],
+    rating: 4.8,
+    reviews: 20,
+    verified: true,
+    available: true,
+    initials: "MA",
+    accent: "linear-gradient(135deg, #08223c, #2f6da1)",
+    mapPosition: { x: 62, y: 78 },
+    coordinates: { lat: 11.43716, lng: -85.82632 },
+  },
+  {
+    id: 8,
+    name: "Nica Digital Lab",
+    role: "Marketing & contenido",
+    category: "Tecnología",
+    location: "Chinandega",
+    department: "Chinandega",
+    description: "Ayudamos a pequeños negocios a vender mejor con estrategia digital, contenido y campañas medibles.",
+    skills: ["Marketing", "Contenido", "Ads"],
+    rating: 4.8,
+    reviews: 27,
+    verified: true,
+    available: true,
+    initials: "ND",
+    accent: "linear-gradient(135deg, #0a2038, #3f6f98)",
+    mapPosition: { x: 21, y: 42 },
+    coordinates: { lat: 12.62937, lng: -87.13105 },
   },
 ];
 
 export const stats = [
-  { value: "1 plataforma", label: "para mostrar lo que sabés hacer" },
-  { value: "17 departamentos", label: "con potencial para conectar" },
-  { value: "2 públicos", label: "talento y quienes lo necesitan" },
+  { value: "17", label: "departamentos para conectar" },
+  { value: "1", label: "vitrina digital para crecer" },
+  { value: "2", label: "lados de una misma oportunidad" },
 ];
