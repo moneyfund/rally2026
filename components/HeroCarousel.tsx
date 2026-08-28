@@ -65,9 +65,9 @@ export function HeroCarousel() {
         </div>
 
         <div className="hero-side-card">
-          <span className="hero-card-label">MAPA DE NEGOCIOS</span>
-          <strong>Descubrí negocios y emprendimientos cerca de vos.</strong>
-          <p>Solo mostramos ubicaciones que cada negocio decidió marcar voluntariamente en Germina.</p>
+          <span className="hero-card-label">AHORA EN GERMINA</span>
+          <strong>Descubrí perfiles cerca de vos.</strong>
+          <p>Talentos y emprendimientos pueden aparecer en el mapa cuando deciden compartir voluntariamente su ubicación.</p>
           <Link href="/mapa">Explorar mapa <ArrowRight size={16} /></Link>
         </div>
       </div>
