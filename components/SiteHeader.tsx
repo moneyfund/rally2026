@@ -2,8 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ArrowRight, Menu, X } from "lucide-react";
-import { useState } from "react";
+import { ArrowRight, Menu, UserRound, X } from "lucide-react";
+import { onAuthStateChanged, type User } from "firebase/auth";
+import { useEffect, useState } from "react";
+import { auth } from "@/lib/firebase";
 
 const navItems = [
   { href: "/descubrir", label: "Descubrir" },
@@ -15,6 +17,16 @@ const navItems = [
 export function SiteHeader() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => onAuthStateChanged(auth, setUser), []);
+
+  const accountLink = user ? (
+    <Link href="/mi-perfil" className="header-account" onClick={() => setOpen(false)}>
+      <span className="header-account-avatar">{user.photoURL ? <img src={user.photoURL} alt="" /> : <UserRound size={16} />}</span>
+      <span>Mi perfil</span>
+    </Link>
+  ) : null;
 
   return (
     <header className="site-header">
@@ -31,14 +43,12 @@ export function SiteHeader() {
             </Link>
           ))}
           <div className="mobile-nav-actions">
-            <Link href="/entrar" className="btn btn-ghost" onClick={() => setOpen(false)}>Entrar</Link>
-            <Link href="/crear-perfil" className="btn btn-primary" onClick={() => setOpen(false)}>Crear perfil <ArrowRight size={16} /></Link>
+            {user ? accountLink : <><Link href="/entrar" className="btn btn-ghost" onClick={() => setOpen(false)}>Entrar</Link><Link href="/crear-perfil" className="btn btn-primary" onClick={() => setOpen(false)}>Crear perfil <ArrowRight size={16} /></Link></>}
           </div>
         </nav>
 
         <div className="header-actions">
-          <Link href="/entrar" className="btn btn-ghost">Entrar</Link>
-          <Link href="/crear-perfil" className="btn btn-primary">Crear perfil <ArrowRight size={16} /></Link>
+          {user ? accountLink : <><Link href="/entrar" className="btn btn-ghost">Entrar</Link><Link href="/crear-perfil" className="btn btn-primary">Crear perfil <ArrowRight size={16} /></Link></>}
         </div>
 
         <button className="menu-button" type="button" onClick={() => setOpen((value) => !value)} aria-label="Abrir menú">
