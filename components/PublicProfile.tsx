@@ -20,23 +20,28 @@ import { useEffect, useMemo, useState } from "react";
 import { db } from "@/lib/firebase";
 import { emptyProfile, type GerminaProfile } from "@/lib/profile-types";
 import { nicaraguaWhatsappUrl } from "@/lib/whatsapp";
-import { ProfileLocationMap } from "@/components/ProfileLocationMap";
+import { GoogleMapEmbed } from "@/components/GoogleMapEmbed";
 
 function normalizeProfile(uid: string, data: Record<string, unknown>): GerminaProfile {
   const social = data.socialLinks && typeof data.socialLinks === "object" ? data.socialLinks as Record<string, unknown> : {};
   const coords = data.coordinates && typeof data.coordinates === "object" ? data.coordinates as Record<string, unknown> : null;
+  const kind = data.kind === "negocio" ? "negocio" : "persona";
+  const coordinates = coords && typeof coords.lat === "number" && typeof coords.lng === "number" ? { lat: coords.lat, lng: coords.lng } : null;
+  const legacyBusinessLocation = typeof data.locationPublic !== "boolean" && kind === "negocio" && Boolean(coordinates);
   const base = emptyProfile(uid);
+
   return {
     ...base,
     ownerId: uid,
-    kind: data.kind === "negocio" ? "negocio" : "persona",
+    kind,
     name: String(data.name ?? "Perfil Germina"),
     category: String(data.category ?? "Servicios"),
     profession: String(data.profession ?? data.headline ?? ""),
     headline: String(data.headline ?? ""),
     description: String(data.description ?? ""),
     location: String(data.location ?? "Nicaragua"),
-    coordinates: coords && typeof coords.lat === "number" && typeof coords.lng === "number" ? { lat: coords.lat, lng: coords.lng } : null,
+    coordinates,
+    locationPublic: data.locationPublic === true || legacyBusinessLocation,
     phone: String(data.phone ?? ""),
     socialLinks: {
       website: String(social.website ?? ""),
@@ -48,6 +53,7 @@ function normalizeProfile(uid: string, data: Record<string, unknown>): GerminaPr
     services: Array.isArray(data.services) ? data.services.map(String) : Array.isArray(data.skills) ? data.skills.map(String) : [],
     avatarUrl: String(data.avatarUrl ?? ""),
     googlePhotoUrl: String(data.googlePhotoUrl ?? ""),
+    coverUrl: String(data.coverUrl ?? ""),
     portfolio: Array.isArray(data.portfolio) ? data.portfolio as GerminaProfile["portfolio"] : [],
     available: data.available !== false,
     verified: Boolean(data.verified),
@@ -61,7 +67,7 @@ function externalUrl(value: string) {
 }
 
 function directionsUrl(profile: GerminaProfile) {
-  if (profile.kind !== "negocio" || !profile.coordinates) return "";
+  if (!profile.locationPublic || !profile.coordinates) return "";
   const { lat, lng } = profile.coordinates;
   return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${lat},${lng}`)}`;
 }
@@ -100,10 +106,14 @@ export function PublicProfile({ uid }: { uid: string }) {
 
   const whatsappUrl = nicaraguaWhatsappUrl(profile.socialLinks.whatsapp || profile.phone);
   const mapsUrl = directionsUrl(profile);
+  const showMap = profile.locationPublic && Boolean(profile.coordinates);
 
   return (
     <main className="public-profile-page">
-      <section className="public-profile-hero">
+      <section
+        className={`public-profile-hero ${profile.coverUrl ? "public-profile-hero-with-cover" : ""}`}
+        style={profile.coverUrl ? { backgroundImage: `url(${profile.coverUrl})` } : undefined}
+      >
         <div className="shell public-profile-hero-inner">
           <div className="public-profile-avatar">
             {avatar ? <img src={avatar} alt={`Foto de ${profile.name}`} /> : <span>{initials}</span>}
@@ -133,10 +143,10 @@ export function PublicProfile({ uid }: { uid: string }) {
 
           {profile.portfolio.length ? <section className="public-profile-card"><div className="public-section-heading"><div><span className="eyebrow">PORTAFOLIO</span><h2>Trabajo y servicios</h2></div><span>{profile.portfolio.length} publicaciones</span></div><div className="public-portfolio-grid">{profile.portfolio.map((item) => <article key={item.id}><div className="public-portfolio-image"><img src={item.url} alt={item.title} /></div><div><strong>{item.title}</strong>{item.description ? <p>{item.description}</p> : null}</div></article>)}</div></section> : null}
 
-          {profile.kind === "negocio" && profile.coordinates ? (
-            <section className="public-profile-card">
-              <div className="public-section-heading"><div><span className="eyebrow">UBICACIÓN DEL NEGOCIO</span><h2>{profile.location}</h2></div></div>
-              <ProfileLocationMap value={profile.coordinates} readOnly />
+          {showMap && profile.coordinates ? (
+            <section className="public-profile-card public-location-card">
+              <div className="public-section-heading"><div><span className="eyebrow">UBICACIÓN PÚBLICA</span><h2>{profile.location}</h2></div><span>Compartida por el usuario</span></div>
+              <GoogleMapEmbed coordinates={profile.coordinates} label={profile.name} />
               <div className="business-location-actions"><a href={mapsUrl} target="_blank" rel="noreferrer" className="btn btn-primary"><Navigation size={16} /> Abrir ruta en Google Maps</a></div>
             </section>
           ) : null}
@@ -155,7 +165,7 @@ export function PublicProfile({ uid }: { uid: string }) {
               {mapsUrl ? <a href={mapsUrl} target="_blank" rel="noreferrer"><Navigation size={17} /><span>Cómo llegar</span><span>↗</span></a> : null}
             </div>
           </section>
-          <section className="public-profile-safety"><BadgeCheck size={18} /><div><strong>Privacidad en Germina</strong><p>La ubicación exacta en mapa solo se publica para negocios que la hayan marcado voluntariamente. Los talentos no muestran un punto preciso.</p></div></section>
+          <section className="public-profile-safety"><BadgeCheck size={18} /><div><strong>Privacidad en Germina</strong><p>La ubicación exacta solo aparece cuando el propietario activa voluntariamente “Permitir que esta ubicación sea pública”.</p></div></section>
         </aside>
       </div>
     </main>
