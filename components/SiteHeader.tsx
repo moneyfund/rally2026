@@ -18,8 +18,24 @@ export function SiteHeader() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
+  const [scrolled, setScrolled] = useState(false);
+  const isHome = pathname === "/";
 
   useEffect(() => onAuthStateChanged(auth, setUser), []);
+
+  useEffect(() => {
+    if (!isHome) {
+      setScrolled(true);
+      return;
+    }
+
+    const updateHeader = () => setScrolled(window.scrollY > 44);
+    updateHeader();
+    window.addEventListener("scroll", updateHeader, { passive: true });
+    return () => window.removeEventListener("scroll", updateHeader);
+  }, [isHome]);
+
+  useEffect(() => setOpen(false), [pathname]);
 
   const accountLink = user ? (
     <Link href="/mi-perfil" className="header-account" onClick={() => setOpen(false)}>
@@ -28,8 +44,12 @@ export function SiteHeader() {
     </Link>
   ) : null;
 
+  const headerState = isHome
+    ? scrolled || open ? "site-header-home site-header-solid" : "site-header-home site-header-transparent"
+    : "site-header-solid";
+
   return (
-    <header className="site-header">
+    <header className={`site-header ${headerState}`}>
       <div className="shell header-inner">
         <Link href="/" className="brand" onClick={() => setOpen(false)} aria-label="Germina inicio">
           <span className="brand-mark brand-mark-logo"><img src="/germina-logo.svg" alt="" /></span>
