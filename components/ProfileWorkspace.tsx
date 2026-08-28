@@ -56,18 +56,19 @@ function profileFromData(uid: string, data: Record<string, unknown>, user: User)
   const base = emptyProfile(uid);
   const social = data.socialLinks && typeof data.socialLinks === "object" ? data.socialLinks as Record<string, unknown> : {};
   const coords = data.coordinates && typeof data.coordinates === "object" ? data.coordinates as Record<string, unknown> : null;
+  const kind = data.kind === "negocio" ? "negocio" : "persona";
 
   return {
     ...base,
     ownerId: uid,
-    kind: data.kind === "negocio" ? "negocio" : "persona",
+    kind,
     name: String(data.name ?? user.displayName ?? ""),
     category: String(data.category ?? "Servicios"),
     profession: String(data.profession ?? data.headline ?? ""),
     headline: String(data.headline ?? ""),
     description: String(data.description ?? ""),
     location: String(data.location ?? ""),
-    coordinates: coords && typeof coords.lat === "number" && typeof coords.lng === "number"
+    coordinates: kind === "negocio" && coords && typeof coords.lat === "number" && typeof coords.lng === "number"
       ? { lat: coords.lat, lng: coords.lng }
       : null,
     phone: String(data.phone ?? ""),
@@ -127,7 +128,14 @@ export function ProfileWorkspace() {
     async function loadProfile() {
       setLoading(true);
       try {
-        const snapshot = await getDoc(doc(db, "profiles", user!.uid));
+        const profileRef = doc(db, "profiles", user!.uid);
+        const snapshot = await getDoc(profileRef);
+        if (snapshot.exists()) {
+          const raw = snapshot.data();
+          if (raw.kind !== "negocio" && raw.coordinates) {
+            await setDoc(profileRef, { coordinates: null, updatedAt: serverTimestamp() }, { merge: true });
+          }
+        }
         const next = snapshot.exists()
           ? profileFromData(user!.uid, snapshot.data(), user!)
           : { ...emptyProfile(user!.uid), name: user!.displayName ?? "", googlePhotoUrl: user!.photoURL ?? "" };
@@ -159,12 +167,28 @@ export function ProfileWorkspace() {
 
   const avatar = profile.avatarUrl || profile.googlePhotoUrl || user?.photoURL || "";
   const completion = useMemo(() => {
-    const checks = [profile.name, profile.profession, profile.description, profile.location, profile.coordinates, profile.services.length, avatar];
+    const checks = [
+      profile.name,
+      profile.profession,
+      profile.description,
+      profile.location,
+      ...(profile.kind === "negocio" ? [profile.coordinates] : []),
+      profile.services.length,
+      avatar,
+    ];
     return Math.round((checks.filter(Boolean).length / checks.length) * 100);
   }, [profile, avatar]);
 
   function patchProfile<K extends keyof GerminaProfile>(key: K, value: GerminaProfile[K]) {
     setProfile((current) => ({ ...current, [key]: value }));
+  }
+
+  function changeKind(kind: "persona" | "negocio") {
+    setProfile((current) => ({
+      ...current,
+      kind,
+      coordinates: kind === "persona" ? null : current.coordinates,
+    }));
   }
 
   function patchSocial(key: keyof GerminaProfile["socialLinks"], value: string) {
@@ -180,6 +204,7 @@ export function ProfileWorkspace() {
       const services = servicesText.split(",").map((item) => item.trim()).filter(Boolean);
       const profileRef = doc(db, "profiles", user.uid);
       const existing = await getDoc(profileRef);
+      const publicCoordinates = profile.kind === "negocio" ? profile.coordinates : null;
       const payload = {
         ownerId: user.uid,
         kind: profile.kind,
@@ -189,7 +214,7 @@ export function ProfileWorkspace() {
         headline: profile.headline.trim() || profile.profession.trim(),
         description: profile.description.trim(),
         location: profile.location.trim(),
-        coordinates: profile.coordinates,
+        coordinates: publicCoordinates,
         phone: profile.phone.trim(),
         socialLinks: profile.socialLinks,
         services,
@@ -216,8 +241,13 @@ export function ProfileWorkspace() {
       if (profile.name.trim() && profile.name.trim() !== user.displayName) {
         await updateAuthProfile(user, { displayName: profile.name.trim() });
       }
-      setProfile((current) => ({ ...current, services, googlePhotoUrl: user.photoURL ?? current.googlePhotoUrl }));
-      setNotice("Perfil guardado correctamente.");
+      setProfile((current) => ({
+        ...current,
+        services,
+        coordinates: publicCoordinates,
+        googlePhotoUrl: user.photoURL ?? current.googlePhotoUrl,
+      }));
+      setNotice(profile.kind === "negocio" ? "Perfil y ubicación del negocio guardados correctamente." : "Perfil guardado. Tu ubicación exacta no se publica para proteger tu privacidad.");
     } catch (caught) {
       setError(firebaseMessage(caught));
     } finally {
@@ -437,7 +467,7 @@ export function ProfileWorkspace() {
               <span className="profile-privacy-badge public">Público</span>
             </div>
             <div className="profile-editor-grid">
-              <label><span>Tipo de perfil</span><select value={profile.kind} onChange={(event) => patchProfile("kind", event.target.value as "persona" | "negocio")}><option value="persona">Talento / profesional</option><option value="negocio">Negocio / emprendimiento</option></select></label>
+              <label><span>Tipo de perfil</span><select value={profile.kind} onChange={(event) => changeKind(event.target.value as "persona" | "negocio")}><option value="persona">Talento / profesional</option><option value="negocio">Negocio / emprendimiento</option></select></label>
               <label><span>Nombre</span><input value={profile.name} onChange={(event) => patchProfile("name", event.target.value)} placeholder="Tu nombre o marca" /></label>
               <label><span>Categoría</span><select value={profile.category} onChange={(event) => patchProfile("category", event.target.value)}>{categories.map((item) => <option key={item}>{item}</option>)}</select></label>
               <label><span>Profesión / especialidad</span><input value={profile.profession} onChange={(event) => patchProfile("profession", event.target.value)} placeholder="Ej. Diseñadora de marca" /></label>
@@ -450,11 +480,18 @@ export function ProfileWorkspace() {
 
           <section id="ubicacion" className="profile-editor-card reveal-card">
             <div className="profile-card-heading">
-              <div><span className="profile-section-number">02</span><div><h2>Ubicación</h2><p>Escribí tu zona y fijá el punto desde el mapa.</p></div></div>
-              <span className="profile-privacy-badge public">Público</span>
+              <div><span className="profile-section-number">02</span><div><h2>{profile.kind === "negocio" ? "Ubicación del negocio" : "Ubicación general"}</h2><p>{profile.kind === "negocio" ? "Escribí tu zona y fijá únicamente el punto que querés publicar para tu negocio." : "Por privacidad, los talentos solo muestran la ciudad o zona escrita por ellos; nunca un punto exacto en el mapa."}</p></div></div>
+              <span className="profile-privacy-badge public">{profile.kind === "negocio" ? "Público" : "Zona general"}</span>
             </div>
-            <label className="profile-single-field"><span>Ciudad / departamento</span><input value={profile.location} onChange={(event) => patchProfile("location", event.target.value)} placeholder="Ej. Managua, Nicaragua" /></label>
-            <ProfileLocationMap value={profile.coordinates} onChange={(coordinates) => patchProfile("coordinates", coordinates)} />
+            <label className="profile-single-field"><span>{profile.kind === "negocio" ? "Dirección, ciudad o zona" : "Ciudad / departamento"}</span><input value={profile.location} onChange={(event) => patchProfile("location", event.target.value)} placeholder="Ej. Managua, Nicaragua" /></label>
+            {profile.kind === "negocio" ? (
+              <>
+                <div className="business-map-consent"><ShieldCheck size={17} /><span><strong>Ubicación voluntaria</strong> Solo se publicará el punto que marques manualmente en este mapa. Germina no obtiene tu ubicación automática.</span></div>
+                <ProfileLocationMap value={profile.coordinates} onChange={(coordinates) => patchProfile("coordinates", coordinates)} />
+              </>
+            ) : (
+              <div className="talent-location-privacy"><LockKeyhole size={20} /><div><strong>Tu punto exacto está protegido</strong><p>Este perfil no aparecerá como pin en el mapa. Conservamos únicamente la zona que escribiste arriba.</p></div></div>
+            )}
           </section>
 
           <section id="servicios" className="profile-editor-card reveal-card">
