@@ -13,8 +13,15 @@ type MapProfile = TalentProfile & {
   avatarUrl?: string;
 };
 
+const demoBusinesses = profiles.filter((profile) => profile.kind === "negocio");
+
 function initialsFrom(name: string) {
   return name.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase()).join("") || "G";
+}
+
+function directionsUrl(profile: MapProfile) {
+  const { lat, lng } = profile.coordinates;
+  return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${lat},${lng}`)}`;
 }
 
 export function RealMap({ compact = false }: { compact?: boolean }) {
@@ -24,7 +31,7 @@ export function RealMap({ compact = false }: { compact?: boolean }) {
   const markerGroupRef = useRef<import("leaflet").LayerGroup | null>(null);
   const [mapReady, setMapReady] = useState(false);
   const [liveProfiles, setLiveProfiles] = useState<MapProfile[]>([]);
-  const [selected, setSelected] = useState<MapProfile | null>(profiles[0]);
+  const [selected, setSelected] = useState<MapProfile | null>(demoBusinesses[0] ?? null);
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("Todos");
   const [department, setDepartment] = useState("Todos");
@@ -36,22 +43,25 @@ export function RealMap({ compact = false }: { compact?: boolean }) {
       snapshot.docs.forEach((snapshotDoc, index) => {
         const data = snapshotDoc.data();
         if (data.status && data.status !== "active") return;
+        if (data.kind !== "negocio") return;
+
         const coords = data.coordinates && typeof data.coordinates === "object" ? data.coordinates as Record<string, unknown> : null;
         if (!coords || typeof coords.lat !== "number" || typeof coords.lng !== "number") return;
 
-        const name = String(data.name ?? "Perfil Germina");
+        const name = String(data.name ?? "Negocio Germina");
         const location = String(data.location ?? "Nicaragua");
         const services = Array.isArray(data.services) ? data.services.map(String) : Array.isArray(data.skills) ? data.skills.map(String) : [];
         items.push({
           id: 20000 + index,
           uid: snapshotDoc.id,
           avatarUrl: String(data.avatarUrl ?? data.googlePhotoUrl ?? ""),
+          kind: "negocio",
           name,
-          role: String(data.profession ?? data.headline ?? data.category ?? "Talento Germina"),
+          role: String(data.profession ?? data.headline ?? data.category ?? "Negocio Germina"),
           category: String(data.category ?? "Servicios"),
           location,
           department: location,
-          description: String(data.description ?? "Perfil creado en Germina."),
+          description: String(data.description ?? "Negocio creado en Germina."),
           skills: services,
           rating: 0,
           reviews: 0,
@@ -67,7 +77,7 @@ export function RealMap({ compact = false }: { compact?: boolean }) {
     }, () => setLiveProfiles([]));
   }, []);
 
-  const allProfiles = useMemo<MapProfile[]>(() => [...liveProfiles, ...profiles], [liveProfiles]);
+  const allProfiles = useMemo<MapProfile[]>(() => [...liveProfiles, ...demoBusinesses], [liveProfiles]);
 
   const departments = useMemo(
     () => ["Todos", ...Array.from(new Set(allProfiles.map((profile) => profile.department)))],
@@ -177,8 +187,8 @@ export function RealMap({ compact = false }: { compact?: boolean }) {
         <div className={styles.searchArea}>
           <div className={styles.searchTopline}>
             <div>
-              <span className={styles.kicker}>MAPA DE TALENTO</span>
-              <h1>Encontrá talento cerca de vos.</h1>
+              <span className={styles.kicker}>MAPA DE NEGOCIOS</span>
+              <h1>Encontrá negocios y emprendimientos cerca de vos.</h1>
             </div>
             <span className={styles.resultCount}>{filteredProfiles.length} {filteredProfiles.length === 1 ? "resultado" : "resultados"}</span>
           </div>
@@ -186,7 +196,7 @@ export function RealMap({ compact = false }: { compact?: boolean }) {
           <div className={styles.filterBar}>
             <label className={styles.searchField}>
               <Search size={18} />
-              <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar habilidad, negocio o persona" aria-label="Buscar talento en el mapa" />
+              <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar negocio, servicio o categoría" aria-label="Buscar negocios en el mapa" />
             </label>
 
             <label className={styles.selectField}>
@@ -215,27 +225,30 @@ export function RealMap({ compact = false }: { compact?: boolean }) {
       ) : null}
 
       <div className={compact ? "" : styles.mapBody}>
-        <div ref={containerRef} className={`real-map ${compact ? "" : styles.realMap}`} aria-label="Mapa interactivo de talento en Nicaragua" />
+        <div ref={containerRef} className={`real-map ${compact ? "" : styles.realMap}`} aria-label="Mapa interactivo de negocios y emprendimientos en Nicaragua" />
 
         {!compact ? (
           <aside className={`map-profile-panel ${styles.profilePanel}`}>
             {selected ? (
               <>
-                <span className="map-panel-kicker"><Navigation size={15} /> {selected.uid ? "PERFIL REAL" : "PERFIL SELECCIONADO"}</span>
+                <span className="map-panel-kicker"><Navigation size={15} /> {selected.uid ? "NEGOCIO REAL" : "NEGOCIO SELECCIONADO"}</span>
                 <div className="map-profile-head">
                   <div className="talent-avatar" style={selected.avatarUrl ? undefined : { background: selected.accent }}>{selected.avatarUrl ? <img src={selected.avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "inherit" }} /> : selected.initials}</div>
                   <div><div className="talent-title-row"><h3>{selected.name}</h3>{selected.verified ? <BadgeCheck size={17} /> : null}</div><p>{selected.role}</p></div>
                 </div>
-                <span className="talent-location"><MapPin size={14} /> {selected.location}, Nicaragua</span>
+                <span className="talent-location"><MapPin size={14} /> {selected.location}</span>
                 <p className="map-profile-copy">{selected.description}</p>
                 <div className="skill-row">{selected.skills.map((skill) => <span key={skill}>{skill}</span>)}</div>
                 <div className="map-profile-score"><span><Star size={15} fill="currentColor" /> {selected.rating.toFixed(1)}</span><span>{selected.reviews} reseñas</span></div>
-                {selected.uid ? <Link href={`/perfil/${selected.uid}`} className="btn btn-primary map-contact">Ver perfil completo</Link> : <button type="button" className="btn btn-primary map-contact">Ver perfil completo</button>}
+                <div className="map-location-actions">
+                  <a href={directionsUrl(selected)} target="_blank" rel="noreferrer" className="btn btn-primary map-contact"><Navigation size={16} /> Cómo llegar</a>
+                  {selected.uid ? <Link href={`/perfil/${selected.uid}`} className="btn btn-ghost map-contact">Ver perfil</Link> : null}
+                </div>
               </>
             ) : (
               <div className={styles.emptyPanel}>
                 <Search size={24} />
-                <strong>No encontramos perfiles</strong>
+                <strong>No encontramos negocios</strong>
                 <p>Probá cambiando la búsqueda o limpiando los filtros.</p>
                 <button type="button" className="btn btn-primary" onClick={resetFilters}>Limpiar filtros</button>
               </div>
