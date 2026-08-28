@@ -25,33 +25,33 @@ export function DiscoverClient() {
     const unsubscribe = onSnapshot(
       collection(db, "profiles"),
       (snapshot) => {
-        const items = snapshot.docs
-          .map((snapshotDoc, index) => {
-            const data = snapshotDoc.data();
-            if (data.status && data.status !== "active") return null;
-            const name = String(data.name ?? "Perfil Germina");
-            const location = String(data.location ?? "Nicaragua");
+        const items: TalentProfile[] = [];
 
-            return {
-              id: 10000 + index,
-              name,
-              role: String(data.headline ?? data.category ?? "Talento Germina"),
-              category: String(data.category ?? "Servicios"),
-              location,
-              department: location,
-              description: String(data.description ?? "Perfil creado en Germina."),
-              skills: Array.isArray(data.skills) ? data.skills.map(String) : [],
-              rating: 0,
-              reviews: 0,
-              verified: Boolean(data.verified),
-              available: data.available !== false,
-              initials: initialsFrom(name),
-              accent: "linear-gradient(135deg, #071d36, #315d89)",
-              mapPosition: { x: 0, y: 0 },
-              coordinates: { lat: 12.114, lng: -86.236 },
-            } satisfies TalentProfile;
-          })
-          .filter((profile): profile is TalentProfile => profile !== null);
+        snapshot.docs.forEach((snapshotDoc, index) => {
+          const data = snapshotDoc.data();
+          if (data.status && data.status !== "active") return;
+
+          const name = String(data.name ?? "Perfil Germina");
+          const location = String(data.location ?? "Nicaragua");
+          items.push({
+            id: 10000 + index,
+            name,
+            role: String(data.headline ?? data.category ?? "Talento Germina"),
+            category: String(data.category ?? "Servicios"),
+            location,
+            department: location,
+            description: String(data.description ?? "Perfil creado en Germina."),
+            skills: Array.isArray(data.skills) ? data.skills.map(String) : [],
+            rating: 0,
+            reviews: 0,
+            verified: Boolean(data.verified),
+            available: data.available !== false,
+            initials: initialsFrom(name),
+            accent: "linear-gradient(135deg, #071d36, #315d89)",
+            mapPosition: { x: 0, y: 0 },
+            coordinates: { lat: 12.114, lng: -86.236 },
+          });
+        });
 
         setLiveProfiles(items);
       },
