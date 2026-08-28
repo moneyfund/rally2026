@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { BadgeCheck, ChevronDown, MapPin, Navigation, RotateCcw, Search, SlidersHorizontal, Star } from "lucide-react";
-import { collection, onSnapshot, query as firestoreQuery, where } from "firebase/firestore";
+import { collection, onSnapshot, query as firestoreQuery, where, type DocumentData, type QuerySnapshot } from "firebase/firestore";
 import { categories, profiles, type TalentProfile } from "@/lib/demo-data";
 import { db } from "@/lib/firebase";
 import styles from "./RealMap.module.css";
@@ -14,6 +14,7 @@ type MapProfile = TalentProfile & {
 };
 
 const demoMapProfiles = profiles;
+const VERIFICATION_ROLLOUT_AT = new Date("2026-08-28T22:51:00.000Z");
 
 function initialsFrom(name: string) {
   return name.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase()).join("") || "G";
@@ -34,6 +35,50 @@ function sproutIcon(L: typeof import("leaflet")) {
   });
 }
 
+function snapshotToMapProfiles(snapshot: QuerySnapshot<DocumentData>, idOffset: number): MapProfile[] {
+  const items: MapProfile[] = [];
+
+  snapshot.docs.forEach((snapshotDoc, index) => {
+    const data = snapshotDoc.data();
+    if (data.status && data.status !== "active") return;
+    const kind = data.kind === "negocio" ? "negocio" : "persona";
+    const legacyBusinessPublic = typeof data.locationPublic !== "boolean" && kind === "negocio";
+    if (data.locationPublic !== true && !legacyBusinessPublic) return;
+
+    const coords = data.coordinates && typeof data.coordinates === "object" ? data.coordinates as Record<string, unknown> : null;
+    if (!coords || typeof coords.lat !== "number" || typeof coords.lng !== "number") return;
+
+    const name = String(data.name ?? "Perfil Germina");
+    const location = String(data.location ?? "Nicaragua");
+    const services = Array.isArray(data.services) ? data.services.map(String) : Array.isArray(data.skills) ? data.skills.map(String) : [];
+    const legacyProfile = data.verificationStatus == null;
+
+    items.push({
+      id: idOffset + index,
+      uid: snapshotDoc.id,
+      avatarUrl: String(data.avatarUrl ?? data.googlePhotoUrl ?? ""),
+      kind,
+      name,
+      role: String(data.profession ?? data.headline ?? data.category ?? (kind === "negocio" ? "Negocio Germina" : "Talento Germina")),
+      category: String(data.category ?? "Servicios"),
+      location,
+      department: location,
+      description: String(data.description ?? "Perfil creado en Germina."),
+      skills: services,
+      rating: 0,
+      reviews: 0,
+      verified: data.verified === true || legacyProfile,
+      available: data.available !== false,
+      initials: initialsFrom(name),
+      accent: "linear-gradient(135deg, #071d36, #315d89)",
+      mapPosition: { x: 0, y: 0 },
+      coordinates: { lat: coords.lat, lng: coords.lng },
+    });
+  });
+
+  return items;
+}
+
 export function RealMap({ compact = false }: { compact?: boolean }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<import("leaflet").Map | null>(null);
@@ -48,46 +93,40 @@ export function RealMap({ compact = false }: { compact?: boolean }) {
   const [availableOnly, setAvailableOnly] = useState(false);
 
   useEffect(() => {
-    const publicProfilesQuery = firestoreQuery(collection(db, "profiles"), where("verified", "==", true));
-    return onSnapshot(publicProfilesQuery, (snapshot) => {
-      const items: MapProfile[] = [];
-      snapshot.docs.forEach((snapshotDoc, index) => {
-        const data = snapshotDoc.data();
-        if (data.status && data.status !== "active") return;
-        const kind = data.kind === "negocio" ? "negocio" : "persona";
-        const legacyBusinessPublic = typeof data.locationPublic !== "boolean" && kind === "negocio";
-        if (data.locationPublic !== true && !legacyBusinessPublic) return;
+    let approvedProfiles: MapProfile[] = [];
+    let legacyProfiles: MapProfile[] = [];
 
-        const coords = data.coordinates && typeof data.coordinates === "object" ? data.coordinates as Record<string, unknown> : null;
-        if (!coords || typeof coords.lat !== "number" || typeof coords.lng !== "number") return;
-
-        const name = String(data.name ?? "Perfil Germina");
-        const location = String(data.location ?? "Nicaragua");
-        const services = Array.isArray(data.services) ? data.services.map(String) : Array.isArray(data.skills) ? data.skills.map(String) : [];
-        items.push({
-          id: 20000 + index,
-          uid: snapshotDoc.id,
-          avatarUrl: String(data.avatarUrl ?? data.googlePhotoUrl ?? ""),
-          kind,
-          name,
-          role: String(data.profession ?? data.headline ?? data.category ?? (kind === "negocio" ? "Negocio Germina" : "Talento Germina")),
-          category: String(data.category ?? "Servicios"),
-          location,
-          department: location,
-          description: String(data.description ?? "Perfil creado en Germina."),
-          skills: services,
-          rating: 0,
-          reviews: 0,
-          verified: Boolean(data.verified),
-          available: data.available !== false,
-          initials: initialsFrom(name),
-          accent: "linear-gradient(135deg, #071d36, #315d89)",
-          mapPosition: { x: 0, y: 0 },
-          coordinates: { lat: coords.lat, lng: coords.lng },
-        });
+    const publish = () => {
+      const merged = new Map<string, MapProfile>();
+      [...legacyProfiles, ...approvedProfiles].forEach((profile) => {
+        if (profile.uid) merged.set(profile.uid, profile);
       });
-      setLiveProfiles(items);
-    }, () => setLiveProfiles([]));
+      setLiveProfiles(Array.from(merged.values()));
+    };
+
+    const approvedQuery = firestoreQuery(collection(db, "profiles"), where("verified", "==", true));
+    const legacyQuery = firestoreQuery(collection(db, "profiles"), where("createdAt", "<", VERIFICATION_ROLLOUT_AT));
+
+    const unsubscribeApproved = onSnapshot(approvedQuery, (snapshot) => {
+      approvedProfiles = snapshotToMapProfiles(snapshot, 20000);
+      publish();
+    }, () => {
+      approvedProfiles = [];
+      publish();
+    });
+
+    const unsubscribeLegacy = onSnapshot(legacyQuery, (snapshot) => {
+      legacyProfiles = snapshotToMapProfiles(snapshot, 40000);
+      publish();
+    }, () => {
+      legacyProfiles = [];
+      publish();
+    });
+
+    return () => {
+      unsubscribeApproved();
+      unsubscribeLegacy();
+    };
   }, []);
 
   const allProfiles = useMemo<MapProfile[]>(() => [...liveProfiles, ...demoMapProfiles], [liveProfiles]);
