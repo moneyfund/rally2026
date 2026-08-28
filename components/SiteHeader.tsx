@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ArrowRight, Menu, Sprout, X } from "lucide-react";
+import { ArrowRight, Menu, X } from "lucide-react";
 import { useState } from "react";
 
 const navItems = [
@@ -20,7 +20,7 @@ export function SiteHeader() {
     <header className="site-header">
       <div className="shell header-inner">
         <Link href="/" className="brand" onClick={() => setOpen(false)} aria-label="Germina inicio">
-          <span className="brand-mark"><Sprout size={20} strokeWidth={2.2} /></span>
+          <span className="brand-mark brand-mark-logo"><img src="/germina-logo.svg" alt="" /></span>
           <span className="brand-copy"><strong>GERMINA</strong><small>DONDE EL TALENTO CRECE</small></span>
         </Link>
 
