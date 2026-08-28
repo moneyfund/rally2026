@@ -10,14 +10,62 @@ service cloud.firestore {
       return signedIn() && request.auth.uid == uid;
     }
 
+    function isAdmin() {
+      return signedIn() && request.auth.token.admin == true;
+    }
+
     match /users/{uid} {
-      allow create: if owns(uid);
-      allow read, update, delete: if owns(uid);
+      allow read: if owns(uid) || isAdmin();
+
+      allow create: if owns(uid)
+        && request.resource.data.uid == uid
+        && request.resource.data.keys().hasOnly([
+          'uid', 'email', 'displayName', 'accountType', 'createdAt', 'updatedAt'
+        ]);
+
+      allow update: if owns(uid)
+        && request.resource.data.uid == uid
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.keys().hasOnly([
+          'uid', 'email', 'displayName', 'accountType', 'createdAt', 'updatedAt'
+        ]);
+
+      allow delete: if owns(uid);
+
+      match /legalDocuments/{documentId} {
+        allow read: if owns(uid) || isAdmin();
+        allow create, update, delete: if owns(uid);
+      }
     }
 
     match /profiles/{uid} {
       allow read: if true;
-      allow create, update, delete: if owns(uid);
+
+      allow create: if owns(uid)
+        && request.resource.data.ownerId == uid
+        && request.resource.data.verified == false
+        && request.resource.data.keys().hasOnly([
+          'ownerId', 'kind', 'name', 'category', 'profession', 'headline',
+          'description', 'location', 'coordinates', 'phone', 'socialLinks',
+          'services', 'skills', 'avatarUrl', 'googlePhotoUrl', 'portfolio',
+          'available', 'verified', 'status', 'createdAt', 'updatedAt'
+        ]);
+
+      allow update: if isAdmin() || (
+        owns(uid)
+        && resource.data.ownerId == uid
+        && request.resource.data.ownerId == uid
+        && request.resource.data.ownerId == resource.data.ownerId
+        && request.resource.data.verified == resource.data.verified
+        && request.resource.data.keys().hasOnly([
+          'ownerId', 'kind', 'name', 'category', 'profession', 'headline',
+          'description', 'location', 'coordinates', 'phone', 'socialLinks',
+          'services', 'skills', 'avatarUrl', 'googlePhotoUrl', 'portfolio',
+          'available', 'verified', 'status', 'createdAt', 'updatedAt'
+        ])
+      );
+
+      allow delete: if owns(uid) || isAdmin();
     }
 
     match /{document=**} {
