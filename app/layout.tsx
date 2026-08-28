@@ -10,6 +10,7 @@ import "./avatar.css";
 import "./map-privacy.css";
 import "./profile-v2.css";
 import "./map-markers.css";
+import "./location-save-fix.css";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 
