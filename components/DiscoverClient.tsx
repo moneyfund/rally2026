@@ -23,6 +23,7 @@ type DirectoryProfile = {
   products: string[];
   ventureNeeds: string[];
   avatarUrl: string;
+  coverUrl: string;
   verified: boolean;
   available: boolean;
   demo?: boolean;
@@ -53,6 +54,7 @@ function snapshotToProfiles(snapshot: QuerySnapshot<DocumentData>): DirectoryPro
       products: productNames(data.products),
       ventureNeeds: Array.isArray(data.ventureNeeds) ? data.ventureNeeds.map(String) : [],
       avatarUrl: String(data.avatarUrl ?? data.googlePhotoUrl ?? ""),
+      coverUrl: String(data.coverUrl ?? ""),
       verified: data.verified === true || data.verificationStatus == null,
       available: data.available !== false,
     };
@@ -86,6 +88,13 @@ function initials(name: string) {
   return name.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase()).join("") || "G";
 }
 
+const DEMO_VENTURE_COVERS: Record<number, string> = {
+  4: "https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=1200&q=82",
+  5: "https://images.unsplash.com/photo-1452860606245-08befc0ff44b?auto=format&fit=crop&w=1200&q=82",
+  7: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=82",
+  8: "https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1200&q=82",
+};
+
 const demoDirectory: DirectoryProfile[] = demoProfiles.map((profile) => ({
   id: `demo-${profile.id}`,
   kind: profile.kind,
@@ -98,6 +107,7 @@ const demoDirectory: DirectoryProfile[] = demoProfiles.map((profile) => ({
   products: profile.kind === "negocio" ? profile.skills.slice(0, 3) : [],
   ventureNeeds: profile.kind === "negocio" ? ["Clientes", "Alianzas comerciales"] : [],
   avatarUrl: "",
+  coverUrl: profile.kind === "negocio" ? DEMO_VENTURE_COVERS[profile.id] ?? "" : "",
   verified: Boolean(profile.verified),
   available: profile.available !== false,
   demo: true,
@@ -222,17 +232,23 @@ function DirectoryCard({ profile }: { profile: DirectoryProfile }) {
 function VentureDirectoryCard({ profile }: { profile: DirectoryProfile }) {
   const href = profile.uid ? `/perfil/${profile.uid}` : undefined;
   const products = profile.products.length ? profile.products : profile.skills;
+  const cardImage = profile.coverUrl || profile.avatarUrl;
   const content = <>
-    <div className="venture-directory-head">
-      <span className="venture-directory-logo">{profile.avatarUrl ? <img src={profile.avatarUrl} alt="" /> : initials(profile.name)}</span>
-      <div><span>EMPRENDIMIENTO</span><h3>{profile.name}</h3><p><Store size={14} /> {profile.category}</p></div>
-      {profile.verified ? <em><BadgeCheck size={15} /> Verificado</em> : null}
+    <div className="venture-directory-visual">
+      {cardImage ? <img src={cardImage} alt={`Imagen de ${profile.name}`} /> : <div className="venture-directory-visual-fallback"><Store size={34} /><span>{profile.category}</span></div>}
+      <span className="venture-directory-visual-icon"><Store size={21} /></span>
+      {profile.verified ? <em className="venture-directory-verified"><BadgeCheck size={15} /> Verificado</em> : null}
     </div>
-    <div className="venture-directory-location"><MapPin size={15} /> {profile.location}</div>
-    <p className="venture-directory-description">{profile.description}</p>
-    <div className="venture-directory-products"><strong>Productos</strong>{products.length ? <ul>{products.slice(0, 3).map((product) => <li key={product}>{product}</li>)}</ul> : <span>Próximamente más información.</span>}</div>
-    <div className="venture-directory-needs"><strong><Handshake size={15} /> Busca:</strong>{profile.ventureNeeds.length ? <div>{profile.ventureNeeds.slice(0, 3).map((need) => <span key={need}>{need}</span>)}</div> : <span>Conexiones y oportunidades</span>}</div>
-    <div className="venture-directory-footer"><span>{profile.role}</span><strong>{href ? "Ver emprendimiento" : "Perfil demostrativo"} {href ? <ArrowRight size={14} /> : null}</strong></div>
+    <div className="venture-directory-content">
+      <div className="venture-directory-head">
+        <div><span>EMPRENDIMIENTO</span><h3>{profile.name}</h3><p><Store size={14} /> {profile.category}</p></div>
+      </div>
+      <div className="venture-directory-location"><MapPin size={15} /> {profile.location}</div>
+      <p className="venture-directory-description">{profile.description}</p>
+      <div className="venture-directory-products"><strong>Productos</strong>{products.length ? <ul>{products.slice(0, 3).map((product) => <li key={product}>{product}</li>)}</ul> : <span>Próximamente más información.</span>}</div>
+      <div className="venture-directory-needs"><strong><Handshake size={15} /> Busca:</strong>{profile.ventureNeeds.length ? <div>{profile.ventureNeeds.slice(0, 3).map((need) => <span key={need}>{need}</span>)}</div> : <span>Conexiones y oportunidades</span>}</div>
+      <div className="venture-directory-footer"><span>{profile.role}</span><strong>{href ? "Ver emprendimiento" : "Perfil demostrativo"} {href ? <ArrowRight size={14} /> : null}</strong></div>
+    </div>
   </>;
   return href ? <Link href={href} className="venture-directory-card">{content}</Link> : <article className="venture-directory-card">{content}</article>;
 }

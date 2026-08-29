@@ -203,26 +203,37 @@ export function AdminDashboard() {
           setDocuments(snapshot.docs.map((item) => ({ id: item.id, ownerId: item.ref.parent.parent?.id ?? "", fileName: String(item.data().fileName ?? "Documento"), storagePath: String(item.data().storagePath ?? ""), contentType: String(item.data().contentType ?? ""), size: Number(item.data().size ?? 0), documentType: String(item.data().documentType ?? "Documento"), createdAt: item.data().createdAt })));
         }, (caught) => setError(firebaseMessage(caught))));
 
-        cleanups.push(onSnapshot(collection(db, "jobPosts"), (snapshot) => {
-          if (active) setJobs(snapshot.docs.map((item) => jobFromDoc(item.id, item.data())));
-        }, (caught) => setError(firebaseMessage(caught))));
-
-        cleanups.push(onSnapshot(collectionGroup(db, "applications"), (snapshot) => {
+        cleanups.push(onSnapshot(collection(db, "jobPosts"), async (snapshot) => {
           if (!active) return;
-          setApplications(snapshot.docs.map((item) => ({
-            id: item.id,
-            jobId: String(item.data().jobId ?? ""),
-            jobTitle: String(item.data().jobTitle ?? "Vacante"),
-            companyId: String(item.data().companyId ?? ""),
-            applicantId: String(item.data().applicantId ?? ""),
-            applicantName: String(item.data().applicantName ?? "Postulante"),
-            applicantEmail: String(item.data().applicantEmail ?? ""),
-            applicantPhone: String(item.data().applicantPhone ?? ""),
-            applicantProfileId: String(item.data().applicantProfileId ?? ""),
-            message: String(item.data().message ?? ""),
-            status: item.data().status === "viewed" || item.data().status === "shortlisted" || item.data().status === "rejected" ? item.data().status : "sent",
-            createdAt: item.data().createdAt,
-          })));
+          const nextJobs = snapshot.docs.map((item) => jobFromDoc(item.id, item.data()));
+          setJobs(nextJobs);
+
+          try {
+            const applicationSnapshots = await Promise.all(
+              snapshot.docs.map((jobDoc) => getDocs(collection(db, "jobPosts", jobDoc.id, "applications")))
+            );
+            if (!active) return;
+            const nextApplications: JobApplication[] = applicationSnapshots.flatMap((applicationSnapshot) =>
+              applicationSnapshot.docs.map((item) => ({
+                id: item.id,
+                jobId: String(item.data().jobId ?? item.ref.parent.parent?.id ?? ""),
+                jobTitle: String(item.data().jobTitle ?? "Vacante"),
+                companyId: String(item.data().companyId ?? ""),
+                applicantId: String(item.data().applicantId ?? ""),
+                applicantName: String(item.data().applicantName ?? "Postulante"),
+                applicantEmail: String(item.data().applicantEmail ?? ""),
+                applicantPhone: String(item.data().applicantPhone ?? ""),
+                applicantProfileId: String(item.data().applicantProfileId ?? ""),
+                message: String(item.data().message ?? ""),
+                status: item.data().status === "viewed" || item.data().status === "shortlisted" || item.data().status === "rejected" ? item.data().status : "sent",
+                createdAt: item.data().createdAt,
+              }))
+            );
+            setApplications(nextApplications);
+          } catch (caught) {
+            console.warn("No se pudieron cargar las postulaciones; el resto de la consola sigue disponible.", caught);
+            if (active) setApplications([]);
+          }
         }, (caught) => setError(firebaseMessage(caught))));
       } catch (caught) {
         if (active) { setAccess("error"); setError(firebaseMessage(caught)); }

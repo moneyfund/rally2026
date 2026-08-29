@@ -123,3 +123,49 @@
   .venture-public-aside { grid-template-columns: 1fr; }
   .venture-back-link { grid-column: auto; }
 }
+
+
+/* VENTURE IMAGE-LED CARD V2 */
+.venture-directory-card { display:grid; grid-template-columns:minmax(0,.92fr) minmax(0,1.08fr); gap:0; padding:0; min-height:430px; overflow:hidden; border-radius:24px; background:#fff; }
+.venture-directory-visual { position:relative; min-height:100%; overflow:hidden; background:#dfe7e9; }
+.venture-directory-visual::after { content:""; position:absolute; inset:0; background:linear-gradient(90deg,rgba(7,29,54,.10),rgba(255,255,255,.03) 55%,rgba(255,255,255,.72) 100%); pointer-events:none; }
+.venture-directory-visual > img { width:100%; height:100%; min-height:430px; display:block; object-fit:cover; transition:transform .45s ease; }
+.venture-directory-card:hover .venture-directory-visual > img { transform:scale(1.035); }
+.venture-directory-visual-fallback { height:100%; min-height:430px; display:grid; place-items:center; align-content:center; gap:10px; background:linear-gradient(145deg,#163b58,#6b8d62); color:#fff; }
+.venture-directory-visual-fallback span { font-size:11px; font-weight:900; letter-spacing:.12em; text-transform:uppercase; }
+.venture-directory-visual-icon { position:absolute; z-index:2; right:-28px; top:34px; width:66px; height:66px; display:grid; place-items:center; border:6px solid #fff; border-radius:50%; background:#071d36; color:#9fc65d; box-shadow:0 12px 30px rgba(7,29,54,.2); }
+.venture-directory-verified { position:absolute; z-index:2; left:17px; bottom:17px; display:inline-flex; align-items:center; gap:5px; padding:8px 10px; border-radius:999px; background:rgba(7,29,54,.86); color:#fff; font-size:10px; font-style:normal; font-weight:900; backdrop-filter:blur(9px); }
+.venture-directory-content { min-width:0; display:flex; flex-direction:column; gap:15px; padding:31px 28px 25px 34px; background:linear-gradient(90deg,#fff 0%,#fff 72%,#fbfcfd 100%); }
+.venture-directory-head { display:block; }
+.venture-directory-head > div > span { color:#6d9f40; }
+.venture-directory-head h3 { margin-top:3px; font-size:23px; }
+.venture-directory-location { margin-top:-3px; }
+.venture-directory-description { padding:0; border-left:0; font-size:13px; line-height:1.62; }
+.venture-directory-products { padding-top:4px; }
+.venture-directory-products ul { padding-left:18px; }
+.venture-directory-needs { margin-top:auto; }
+.venture-directory-footer { padding-top:14px; }
+
+.venture-cover-editor { overflow:hidden; display:grid; grid-template-columns:minmax(260px,.8fr) minmax(0,1.2fr); border:1px solid #dce5ec; border-radius:22px; background:#fff; box-shadow:0 12px 32px rgba(7,29,54,.04); }
+.venture-cover-preview { min-height:235px; overflow:hidden; background:linear-gradient(145deg,#dfe9ed,#eef3f5); }
+.venture-cover-preview > img { width:100%; height:100%; min-height:235px; display:block; object-fit:cover; }
+.venture-cover-preview > div { min-height:235px; display:grid; place-items:center; align-content:center; gap:10px; color:#6c8193; }
+.venture-cover-preview > div span { font-size:12px; font-weight:800; }
+.venture-cover-copy { display:grid; grid-template-columns:auto 1fr; gap:12px; align-content:center; padding:28px; }
+.venture-cover-copy h2 { margin:0 0 6px; font-family:var(--font-manrope),sans-serif; font-size:22px; }
+.venture-cover-copy p { margin:0; color:#687d8f; font-size:13px; line-height:1.65; }
+.venture-cover-copy .btn { grid-column:2; justify-self:start; margin-top:4px; }
+.venture-cover-success,.venture-cover-error { display:block; margin-top:9px; font-weight:800; }
+.venture-cover-success { color:#4f7c2f; }
+.venture-cover-error { color:#b23f3f; }
+
+@media (max-width:820px) {
+  .venture-directory-card { grid-template-columns:1fr; min-height:0; }
+  .venture-directory-visual { min-height:250px; }
+  .venture-directory-visual > img,.venture-directory-visual-fallback { min-height:250px; max-height:290px; }
+  .venture-directory-visual-icon { right:24px; top:auto; bottom:-28px; }
+  .venture-directory-content { padding:32px 22px 24px; }
+  .venture-cover-editor { grid-template-columns:1fr; }
+  .venture-cover-preview,.venture-cover-preview > img,.venture-cover-preview > div { min-height:210px; }
+  .venture-cover-copy { padding:22px; }
+}

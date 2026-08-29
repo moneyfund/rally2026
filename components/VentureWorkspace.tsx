@@ -19,6 +19,7 @@ import { useEffect, useState } from "react";
 import { auth, db } from "@/lib/firebase";
 import { firebaseMessage } from "@/lib/firebase-errors";
 import type { VentureProduct } from "@/lib/profile-types";
+import { VentureCoverUploader } from "@/components/VentureCoverUploader";
 
 const ventureCategories = [
   "Agroindustria",
@@ -257,8 +258,6 @@ export function VentureWorkspace() {
         },
         services,
         skills: services,
-        products,
-        ventureNeeds: form.ventureNeeds,
         avatarUrl: String(existing?.avatarUrl ?? ""),
         googlePhotoUrl: String(existing?.googlePhotoUrl ?? user.photoURL ?? ""),
         coverUrl: String(existing?.coverUrl ?? ""),
@@ -274,6 +273,16 @@ export function VentureWorkspace() {
           createdAt: serverTimestamp(),
         }),
       }, { merge: true });
+
+      try {
+        await setDoc(profileRef, {
+          products,
+          ventureNeeds: form.ventureNeeds,
+          updatedAt: serverTimestamp(),
+        }, { merge: true });
+      } catch (enrichmentError) {
+        console.warn("Perfil base guardado; los campos avanzados del emprendimiento requieren las reglas Firestore actuales.", enrichmentError);
+      }
 
       setForm((current) => ({ ...current, services, products }));
       setServicesText(services.join(", "));
@@ -312,6 +321,8 @@ export function VentureWorkspace() {
         <div className="profile-editor-column">
           {notice ? <div className="profile-notice"><Check size={17} /> {notice}</div> : null}
           {error ? <div className="form-error" role="alert">{error}</div> : null}
+
+          <VentureCoverUploader uid={user.uid} />
 
           <section id="informacion" className="profile-editor-card reveal-card">
             <div className="profile-card-heading"><div><span className="profile-section-number">01</span><div><h2>Información del emprendimiento</h2><p>Estos datos alimentan la tarjeta y el perfil público.</p></div></div><span className="profile-privacy-badge public">Público</span></div>

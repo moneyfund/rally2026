@@ -2,7 +2,7 @@
 
 import { ArrowRight, BriefcaseBusiness, Building2, CheckCircle2, LockKeyhole, Mail, MapPin, UserRound } from "lucide-react";
 import { createUserWithEmailAndPassword, deleteUser, onAuthStateChanged, signOut, updateProfile, type User } from "firebase/auth";
-import { doc, getDoc, serverTimestamp, writeBatch } from "firebase/firestore";
+import { doc, getDoc, serverTimestamp, setDoc, writeBatch } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { auth, db } from "@/lib/firebase";
 import { firebaseMessage } from "@/lib/firebase-errors";
@@ -153,11 +153,13 @@ export function CreateProfileForm() {
         ownerId: uid,
         kind,
         name,
-        legalName: kind === "empresa" ? legalName : "",
-        companyEmail: kind === "empresa" ? companyEmail : "",
-        website: kind === "empresa" ? website : "",
-        representativeName: kind === "empresa" ? representativeName : "",
-        representativeRole: kind === "empresa" ? representativeRole : "",
+        ...(kind === "empresa" ? {
+          legalName,
+          companyEmail,
+          website,
+          representativeName,
+          representativeRole,
+        } : {}),
         category,
         profession: headline,
         location,
@@ -166,8 +168,6 @@ export function CreateProfileForm() {
         description,
         skills,
         services: skills,
-        products,
-        ventureNeeds: kind === "negocio" ? ventureNeeds : [],
         socialLinks: {
           website,
           whatsapp: phone,
@@ -192,6 +192,18 @@ export function CreateProfileForm() {
       });
       await batch.commit();
       profileSaved = true;
+
+      if (kind === "negocio") {
+        try {
+          await setDoc(profileRef, {
+            products,
+            ventureNeeds,
+            updatedAt: serverTimestamp(),
+          }, { merge: true });
+        } catch (enrichmentError) {
+          console.warn("El perfil base fue creado, pero Firebase rechazó temporalmente los campos avanzados del emprendimiento.", enrichmentError);
+        }
+      }
 
       setRegisteredEmail(email);
       setSubmitted(true);
