@@ -1,0 +1,125 @@
+/* Germina · Emprendimientos */
+.venture-registration-needs { display: grid; gap: 8px; padding: 18px; border: 1px solid #dce6ed; border-radius: 18px; background: #f7fafc; }
+.venture-registration-needs > span { font-weight: 800; color: #17344f; }
+.venture-registration-needs > p { margin: 0; color: #718294; font-size: 13px; }
+.venture-registration-needs > div { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 9px; margin-top: 5px; }
+.venture-registration-needs label { display: flex; align-items: center; gap: 9px; padding: 11px 12px; border: 1px solid #e2e9ef; border-radius: 12px; background: #fff; color: #3d5368; font-size: 13px; font-weight: 700; cursor: pointer; }
+.venture-registration-needs input { accent-color: #6da43d; }
+
+.venture-directory-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 18px; }
+.venture-directory-card { min-width: 0; display: grid; gap: 16px; padding: 24px; border: 1px solid #dce5ec; border-radius: 23px; background: #fff; color: #102c45; text-decoration: none; box-shadow: 0 14px 38px rgba(7,29,54,.055); transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
+.venture-directory-card:hover { transform: translateY(-4px); border-color: #c5d5e0; box-shadow: 0 22px 50px rgba(7,29,54,.11); }
+.venture-directory-head { display: grid; grid-template-columns: auto 1fr auto; gap: 13px; align-items: center; }
+.venture-directory-logo { width: 50px; height: 50px; display: grid; place-items: center; overflow: hidden; border-radius: 15px; background: linear-gradient(145deg,#102f4c,#274f6d); color: #fff; font-size: 14px; font-weight: 900; letter-spacing: .03em; }
+.venture-directory-logo img { width: 100%; height: 100%; object-fit: cover; }
+.venture-directory-head > div { min-width: 0; }
+.venture-directory-head > div > span { display: block; margin-bottom: 3px; color: #6c9f3c; font-size: 10px; font-weight: 900; letter-spacing: .14em; }
+.venture-directory-head h3 { margin: 0; font-family: var(--font-manrope),sans-serif; font-size: 20px; letter-spacing: -.025em; }
+.venture-directory-head p { margin: 5px 0 0; display: flex; gap: 5px; align-items: center; color: #60758a; font-size: 12px; }
+.venture-directory-head em { display: inline-flex; align-items: center; gap: 5px; padding: 7px 9px; border-radius: 999px; background: #eff7e8; color: #4c7e26; font-size: 11px; font-style: normal; font-weight: 800; white-space: nowrap; }
+.venture-directory-location { display: flex; align-items: center; gap: 6px; color: #496278; font-size: 13px; font-weight: 700; }
+.venture-directory-description { margin: 0; padding: 13px 0 13px 16px; border-left: 3px solid #d8e2e9; color: #50667b; line-height: 1.65; font-size: 14px; }
+.venture-directory-products { display: grid; gap: 8px; }
+.venture-directory-products > strong { color: #17344f; font-size: 13px; }
+.venture-directory-products ul { margin: 0; padding-left: 20px; display: grid; gap: 5px; color: #52697d; font-size: 13px; }
+.venture-directory-products > span { color: #83909c; font-size: 12px; }
+.venture-directory-needs { display: grid; grid-template-columns: auto 1fr; align-items: start; gap: 9px; padding-top: 13px; border-top: 1px solid #edf1f4; }
+.venture-directory-needs > strong { display: flex; gap: 5px; align-items: center; font-size: 12px; white-space: nowrap; }
+.venture-directory-needs > div { display: flex; flex-wrap: wrap; gap: 6px; }
+.venture-directory-needs > div span { padding: 6px 8px; border-radius: 999px; background: #f2f6f8; color: #506a7f; font-size: 11px; font-weight: 700; }
+.venture-directory-needs > span { color: #788896; font-size: 12px; }
+.venture-directory-footer { display: flex; justify-content: space-between; align-items: center; gap: 15px; padding-top: 15px; border-top: 1px solid #edf1f4; }
+.venture-directory-footer > span { color: #7c8b98; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.venture-directory-footer > strong { display: inline-flex; align-items: center; gap: 5px; color: #123858; font-size: 12px; white-space: nowrap; }
+
+.venture-public-page { min-height: 80vh; background: #f6f8fa; color: #102a43; }
+.venture-public-hero { position: relative; min-height: 320px; display: flex; align-items: flex-end; overflow: hidden; background: linear-gradient(135deg,#071d36,#153c5d 72%,#244e68); background-position: center; background-size: cover; }
+.venture-public-overlay { position: absolute; inset: 0; background: linear-gradient(90deg,rgba(4,24,43,.93),rgba(7,29,54,.79) 55%,rgba(7,29,54,.44)); }
+.venture-public-hero-inner { position: relative; z-index: 1; width: 100%; display: grid; grid-template-columns: auto 1fr auto; gap: 22px; align-items: center; padding-top: 60px; padding-bottom: 46px; }
+.venture-public-mark { width: 100px; height: 100px; display: grid; place-items: center; overflow: hidden; flex: none; border: 4px solid rgba(255,255,255,.24); border-radius: 26px; background: #fff; color: #173c58; box-shadow: 0 20px 45px rgba(0,0,0,.2); font-size: 27px; font-weight: 900; }
+.venture-public-mark img { width: 100%; height: 100%; object-fit: cover; }
+.venture-public-heading { min-width: 0; }
+.venture-public-kicker { display: flex; gap: 9px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; }
+.venture-public-kicker > span { color: #a9d67c; font-size: 11px; font-weight: 900; letter-spacing: .16em; }
+.venture-public-kicker > strong { display: inline-flex; align-items: center; gap: 5px; padding: 5px 8px; border-radius: 999px; background: rgba(136,191,80,.15); color: #d0edb5; font-size: 11px; }
+.venture-public-heading h1 { margin: 0; color: #fff; font-family: var(--font-manrope),sans-serif; font-size: clamp(34px,4vw,55px); line-height: 1; letter-spacing: -.045em; }
+.venture-public-heading > p { margin: 10px 0 0; color: #d4e0ea; font-size: 17px; }
+.venture-public-meta { display: flex; flex-wrap: wrap; gap: 10px 18px; margin-top: 14px; color: #c3d2de; font-size: 13px; font-weight: 700; }
+.venture-public-meta span { display: inline-flex; align-items: center; gap: 6px; }
+.venture-public-actions { display: flex; align-items: center; gap: 9px; }
+.venture-share { width: 45px; height: 45px; display: grid; place-items: center; border: 1px solid rgba(255,255,255,.28); border-radius: 13px; background: rgba(255,255,255,.11); color: #fff; cursor: pointer; }
+
+.venture-public-layout { display: grid; grid-template-columns: minmax(0,1fr) 320px; gap: 26px; padding-top: 34px; padding-bottom: 70px; align-items: start; }
+.venture-public-main { display: grid; gap: 20px; }
+.venture-section { padding: 28px; border: 1px solid #dee6ec; border-radius: 23px; background: #fff; box-shadow: 0 12px 35px rgba(7,29,54,.035); }
+.venture-section-heading { display: flex; gap: 12px; align-items: center; margin-bottom: 18px; }
+.venture-section-heading > span { width: 42px; height: 42px; display: grid; place-items: center; border-radius: 13px; background: #edf4e8; color: #5d8d34; }
+.venture-section-heading small { display: block; margin-bottom: 3px; color: #6d9f40; font-size: 10px; font-weight: 900; letter-spacing: .13em; }
+.venture-section-heading h2 { margin: 0; font-family: var(--font-manrope),sans-serif; font-size: 23px; letter-spacing: -.025em; }
+.venture-about > p, .venture-section-intro { margin: 0; color: #566d81; font-size: 15px; line-height: 1.75; }
+.venture-product-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 14px; }
+.venture-product-card { overflow: hidden; border: 1px solid #e0e7ec; border-radius: 18px; background: #fbfcfd; }
+.venture-product-image { aspect-ratio: 16/9; display: grid; place-items: center; overflow: hidden; background: linear-gradient(135deg,#eaf0f4,#f6f8fa); color: #8091a0; }
+.venture-product-image img { width: 100%; height: 100%; object-fit: cover; }
+.venture-product-body { display: grid; gap: 12px; padding: 17px; }
+.venture-product-body small { color: #7aa449; font-size: 9px; font-weight: 900; letter-spacing: .12em; }
+.venture-product-body h3 { margin: 2px 0 0; font-size: 17px; }
+.venture-product-body > p { margin: 0; color: #627789; font-size: 13px; line-height: 1.6; }
+.venture-product-facts { display: flex; gap: 10px; flex-wrap: wrap; }
+.venture-product-facts span { display: grid; gap: 2px; padding: 8px 10px; border-radius: 10px; background: #f0f4f6; color: #566b7d; font-size: 11px; }
+.venture-product-facts strong { color: #183650; font-size: 10px; text-transform: uppercase; letter-spacing: .06em; }
+.venture-service-grid { display: flex; flex-wrap: wrap; gap: 9px; }
+.venture-service-grid span { padding: 10px 13px; border-radius: 999px; border: 1px solid #dfe7ec; background: #f7fafb; color: #345269; font-size: 12px; font-weight: 800; }
+.venture-evidence-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 12px; margin-top: 18px; }
+.venture-evidence-grid article { overflow: hidden; border: 1px solid #e1e7eb; border-radius: 15px; background: #fff; }
+.venture-evidence-grid img { width: 100%; aspect-ratio: 4/3; object-fit: cover; display: block; }
+.venture-evidence-grid article > div { padding: 12px; }
+.venture-evidence-grid strong { font-size: 12px; }
+.venture-evidence-grid p { margin: 5px 0 0; color: #718190; font-size: 11px; line-height: 1.45; }
+.venture-looking-for { border-color: #d7e4ce; background: linear-gradient(145deg,#fff,#fbfdf9); }
+.venture-needs-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; margin-top: 19px; }
+.venture-needs-grid > div { display: flex; gap: 10px; align-items: center; padding: 13px 14px; border: 1px solid #e0e8dc; border-radius: 13px; background: #fff; }
+.venture-needs-grid > div > span { width: 31px; height: 31px; display: grid; place-items: center; border-radius: 9px; background: #eff6e9; color: #648f3e; }
+.venture-needs-grid strong { font-size: 12px; }
+.venture-empty-block { display: flex; gap: 12px; align-items: center; padding: 17px; border: 1px dashed #d9e2e8; border-radius: 15px; color: #82909b; }
+.venture-empty-block > div { display: grid; gap: 3px; }
+.venture-empty-block strong { color: #4f6577; font-size: 13px; }
+.venture-empty-block span { font-size: 12px; }
+
+.venture-public-aside { position: sticky; top: 100px; display: grid; gap: 14px; }
+.venture-contact-card { padding: 23px; border-radius: 21px; background: #09233d; color: #fff; box-shadow: 0 18px 40px rgba(7,29,54,.14); }
+.venture-contact-card > span { color: #99cb69; font-size: 10px; font-weight: 900; letter-spacing: .15em; }
+.venture-contact-card h3 { margin: 8px 0; font-family: var(--font-manrope),sans-serif; font-size: 21px; letter-spacing: -.02em; }
+.venture-contact-card > p { margin: 0; color: #b9c8d4; font-size: 13px; line-height: 1.55; }
+.venture-contact-card > div { display: grid; gap: 7px; margin-top: 17px; }
+.venture-contact-card a { display: grid; grid-template-columns: auto 1fr auto; gap: 9px; align-items: center; padding: 11px 12px; border-radius: 11px; background: rgba(255,255,255,.08); color: #fff; text-decoration: none; font-size: 12px; font-weight: 700; }
+.venture-trust-card { display: flex; gap: 11px; padding: 18px; border: 1px solid #dce6d5; border-radius: 17px; background: #f5faef; color: #4f7630; }
+.venture-trust-card div { display: grid; gap: 4px; }
+.venture-trust-card strong { font-size: 12px; }
+.venture-trust-card p { margin: 0; color: #6c8060; font-size: 11px; line-height: 1.45; }
+.venture-back-link { padding: 13px; text-align: center; color: #355671; font-size: 12px; font-weight: 800; text-decoration: none; }
+
+@media (max-width: 980px) {
+  .venture-directory-grid { grid-template-columns: 1fr; }
+  .venture-public-hero-inner { grid-template-columns: auto 1fr; }
+  .venture-public-actions { grid-column: 1 / -1; }
+  .venture-public-layout { grid-template-columns: 1fr; }
+  .venture-public-aside { position: static; grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .venture-back-link { grid-column: 1 / -1; }
+}
+@media (max-width: 680px) {
+  .venture-registration-needs > div, .venture-product-grid, .venture-needs-grid { grid-template-columns: 1fr; }
+  .venture-directory-card { padding: 19px; }
+  .venture-directory-head { grid-template-columns: auto 1fr; }
+  .venture-directory-head em { grid-column: 1 / -1; justify-self: start; }
+  .venture-directory-needs { grid-template-columns: 1fr; }
+  .venture-directory-footer { align-items: flex-start; flex-direction: column; }
+  .venture-public-hero-inner { grid-template-columns: 1fr; padding-top: 42px; padding-bottom: 36px; }
+  .venture-public-mark { width: 82px; height: 82px; }
+  .venture-public-heading h1 { font-size: 35px; }
+  .venture-public-layout { padding-top: 20px; }
+  .venture-section { padding: 20px; border-radius: 18px; }
+  .venture-evidence-grid { grid-template-columns: 1fr 1fr; }
+  .venture-public-aside { grid-template-columns: 1fr; }
+  .venture-back-link { grid-column: auto; }
+}
