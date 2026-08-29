@@ -110,9 +110,9 @@ service cloud.firestore {
           'ownerId', 'kind', 'name', 'legalName', 'companyEmail', 'website',
           'representativeName', 'representativeRole', 'category', 'profession',
           'headline', 'description', 'location', 'coordinates', 'locationPublic',
-          'phone', 'socialLinks', 'services', 'skills', 'avatarUrl',
-          'googlePhotoUrl', 'coverUrl', 'portfolio', 'available', 'verified',
-          'status', 'verificationStatus', 'verificationNote',
+          'phone', 'socialLinks', 'services', 'skills', 'products', 'ventureNeeds',
+          'avatarUrl', 'googlePhotoUrl', 'coverUrl', 'portfolio', 'available',
+          'verified', 'status', 'verificationStatus', 'verificationNote',
           'verificationReviewedAt', 'verificationReviewedBy', 'partner',
           'partnerSince', 'createdAt', 'updatedAt'
         ]);
@@ -126,6 +126,7 @@ service cloud.firestore {
         && resource.data.ownerId == uid
         && request.resource.data.ownerId == uid
         && request.resource.data.ownerId == resource.data.ownerId
+        && request.resource.data.kind == resource.data.kind
         && adminProfileFieldsUnchanged()
         && validProfileKind()
         && validLocationConsent()
@@ -133,9 +134,9 @@ service cloud.firestore {
           'ownerId', 'kind', 'name', 'legalName', 'companyEmail', 'website',
           'representativeName', 'representativeRole', 'category', 'profession',
           'headline', 'description', 'location', 'coordinates', 'locationPublic',
-          'phone', 'socialLinks', 'services', 'skills', 'avatarUrl',
-          'googlePhotoUrl', 'coverUrl', 'portfolio', 'available', 'verified',
-          'status', 'verificationStatus', 'verificationNote',
+          'phone', 'socialLinks', 'services', 'skills', 'products', 'ventureNeeds',
+          'avatarUrl', 'googlePhotoUrl', 'coverUrl', 'portfolio', 'available',
+          'verified', 'status', 'verificationStatus', 'verificationNote',
           'verificationReviewedAt', 'verificationReviewedBy', 'partner',
           'partnerSince', 'createdAt', 'updatedAt'
         ])
@@ -163,6 +164,7 @@ service cloud.firestore {
 
       allow update: if isAdmin() || (
         signedIn()
+        && approvedCompany(request.auth.uid)
         && resource.data.companyId == request.auth.uid
         && request.resource.data.companyId == resource.data.companyId
         && request.resource.data.featured == resource.data.featured
@@ -199,6 +201,7 @@ service cloud.firestore {
 
         allow update: if isAdmin() || (
           signedIn()
+          && approvedCompany(request.auth.uid)
           && resource.data.companyId == request.auth.uid
           && request.resource.data.companyId == resource.data.companyId
           && request.resource.data.applicantId == resource.data.applicantId
