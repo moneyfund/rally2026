@@ -13,6 +13,7 @@ import "./map-markers.css";
 import "./location-save-fix.css";
 import "./admin.css";
 import "./marketplace.css";
+import "./ventures.css";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 
