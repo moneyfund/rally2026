@@ -32,7 +32,7 @@
 }
 
 .create-profile-intro-video {
-  /* MP4 original: 1080x1440 (3:4). Sin tarjeta: el blanco del video se funde con la página. */
+  /* MP4 original: 1080x1440 (3:4). Integrado al mismo blanco de la página. */
   display: block;
   width: min(100%, 470px, calc(68vh * 0.75));
   height: auto;
@@ -42,12 +42,14 @@
   border-radius: 0;
   box-shadow: none;
   outline: 0;
-  background: transparent;
-  mix-blend-mode: multiply;
+  background: #fff;
+  mix-blend-mode: normal;
+  isolation: isolate;
 }
 
 .create-profile-form-section {
   padding-top: 44px;
+  background: #fff;
 }
 
 @media (max-width: 900px) {
