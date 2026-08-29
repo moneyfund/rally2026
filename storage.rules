@@ -2,6 +2,7 @@ rules_version = '2';
 
 service firebase.storage {
   match /b/{bucket}/o {
+
     function signedIn() {
       return request.auth != null;
     }
@@ -17,10 +18,37 @@ service firebase.storage {
       );
     }
 
-    function isImage() {
+    function profileApproved(uid) {
+      return firestore.get(
+        /databases/(default)/documents/profiles/$(uid)
+      ).data.verified == true;
+    }
+
+    function legacyPublicProfile(uid) {
+      return (
+        'createdAt' in firestore.get(
+          /databases/(default)/documents/profiles/$(uid)
+        ).data
+      ) && firestore.get(
+        /databases/(default)/documents/profiles/$(uid)
+      ).data.createdAt < timestamp.value(1787957460000);
+    }
+
+    function canReadPublicProfileFile(uid) {
+      return owns(uid)
+        || isAdmin()
+        || profileApproved(uid)
+        || legacyPublicProfile(uid);
+    }
+
+    function isProfileImage() {
       return request.resource != null
         && request.resource.contentType != null
-        && request.resource.contentType.matches('image/.*');
+        && (
+          request.resource.contentType == 'image/jpeg'
+          || request.resource.contentType == 'image/png'
+          || request.resource.contentType == 'image/webp'
+        );
     }
 
     function isLegalFile() {
@@ -34,27 +62,35 @@ service firebase.storage {
     }
 
     match /profiles/{uid}/avatar/{fileName} {
-      allow read: if true;
+      allow read: if canReadPublicProfileFile(uid);
       allow create, update: if owns(uid)
-        && isImage()
+        && isProfileImage()
         && request.resource.size <= 5 * 1024 * 1024;
-      allow delete: if owns(uid);
+      allow delete: if owns(uid) || isAdmin();
     }
 
     match /profiles/{uid}/cover/{fileName} {
-      allow read: if true;
+      allow read: if canReadPublicProfileFile(uid);
       allow create, update: if owns(uid)
-        && isImage()
+        && isProfileImage()
         && request.resource.size <= 10 * 1024 * 1024;
-      allow delete: if owns(uid);
+      allow delete: if owns(uid) || isAdmin();
     }
 
     match /profiles/{uid}/portfolio/{fileName} {
-      allow read: if true;
+      allow read: if canReadPublicProfileFile(uid);
       allow create, update: if owns(uid)
-        && isImage()
+        && isProfileImage()
         && request.resource.size <= 10 * 1024 * 1024;
-      allow delete: if owns(uid);
+      allow delete: if owns(uid) || isAdmin();
+    }
+
+    match /profiles/{uid}/products/{fileName} {
+      allow read: if canReadPublicProfileFile(uid);
+      allow create, update: if owns(uid)
+        && isProfileImage()
+        && request.resource.size <= 10 * 1024 * 1024;
+      allow delete: if owns(uid) || isAdmin();
     }
 
     match /legal/{uid}/{fileName} {
@@ -62,15 +98,15 @@ service firebase.storage {
       allow create, update: if owns(uid)
         && isLegalFile()
         && request.resource.size <= 15 * 1024 * 1024;
-      allow delete: if owns(uid);
+      allow delete: if owns(uid) || isAdmin();
     }
 
     match /businesses/{uid}/{fileName} {
-      allow read: if true;
+      allow read: if canReadPublicProfileFile(uid);
       allow create, update: if owns(uid)
-        && isImage()
+        && isProfileImage()
         && request.resource.size <= 10 * 1024 * 1024;
-      allow delete: if owns(uid);
+      allow delete: if owns(uid) || isAdmin();
     }
 
     match /{allPaths=**} {
