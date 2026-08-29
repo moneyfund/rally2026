@@ -21,6 +21,16 @@ export type PortfolioItem = {
   createdAt: number;
 };
 
+export type VentureProduct = {
+  id: string;
+  name: string;
+  description: string;
+  price: string;
+  availability: string;
+  imageUrl: string;
+  storagePath: string;
+};
+
 export type ProfileKind = "persona" | "negocio" | "empresa";
 
 export type GerminaProfile = {
@@ -37,6 +47,8 @@ export type GerminaProfile = {
   phone: string;
   socialLinks: SocialLinks;
   services: string[];
+  products: VentureProduct[];
+  ventureNeeds: string[];
   avatarUrl: string;
   googlePhotoUrl: string;
   coverUrl: string;
@@ -83,6 +95,8 @@ export function emptyProfile(uid = ""): GerminaProfile {
     phone: "",
     socialLinks: { ...emptySocialLinks },
     services: [],
+    products: [],
+    ventureNeeds: [],
     avatarUrl: "",
     googlePhotoUrl: "",
     coverUrl: "",
