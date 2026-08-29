@@ -1,0 +1,70 @@
+.create-profile-hero {
+  padding: 76px 0 56px;
+  background: linear-gradient(135deg,#f5f8fb 0%,#fff 70%);
+  border-bottom: 1px solid #e3eaf0;
+}
+
+.create-profile-hero .shell {
+  max-width: 920px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.create-profile-hero .eyebrow {
+  margin-bottom: 15px;
+}
+
+.create-profile-hero p {
+  margin: 0 auto;
+  max-width: 760px;
+  color: #5b7289;
+  font-size: 17px;
+  line-height: 1.75;
+}
+
+.create-profile-video-stage {
+  display: flex;
+  justify-content: center;
+  padding: 42px 20px 22px;
+  background: #fff;
+}
+
+.create-profile-video-frame {
+  width: min(520px,100%);
+  border-radius: 26px;
+  overflow: hidden;
+  background: #071d36;
+  box-shadow: 0 24px 70px rgba(7,29,54,.14);
+}
+
+.create-profile-video-frame video {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 3 / 4;
+  object-fit: contain;
+  background: #071d36;
+}
+
+.create-profile-form-section {
+  padding-top: 54px;
+}
+
+@media (max-width: 720px) {
+  .create-profile-hero {
+    padding: 58px 0 42px;
+  }
+
+  .create-profile-hero p {
+    font-size: 15px;
+  }
+
+  .create-profile-video-stage {
+    padding-top: 30px;
+  }
+
+  .create-profile-video-frame {
+    width: min(430px,100%);
+    border-radius: 20px;
+  }
+}
