@@ -13,9 +13,15 @@ service cloud.firestore {
 
     function isAdmin() {
       return signedIn() && (
-        request.auth.token.admin == true
-        || request.auth.token.email == 'norvingarcia220@gmail.com'
+        request.auth.token.get('admin', false) == true
+        || request.auth.token.get('email', '') == 'norvingarcia220@gmail.com'
       );
+    }
+
+    function validAccountType() {
+      return request.resource.data.accountType == 'persona'
+        || request.resource.data.accountType == 'negocio'
+        || request.resource.data.accountType == 'empresa';
     }
 
     function isLegacyPublicProfile() {
@@ -64,6 +70,7 @@ service cloud.firestore {
 
       allow create: if owns(uid)
         && request.resource.data.uid == uid
+        && validAccountType()
         && request.resource.data.keys().hasOnly([
           'uid', 'email', 'displayName', 'accountType', 'createdAt', 'updatedAt'
         ]);
@@ -71,6 +78,11 @@ service cloud.firestore {
       allow update: if owns(uid)
         && request.resource.data.uid == uid
         && request.resource.data.uid == resource.data.uid
+        && validAccountType()
+        && (
+          request.resource.data.accountType == resource.data.accountType
+          || !exists(/databases/$(database)/documents/profiles/$(uid))
+        )
         && request.resource.data.keys().hasOnly([
           'uid', 'email', 'displayName', 'accountType', 'createdAt', 'updatedAt'
         ]);
@@ -93,8 +105,8 @@ service cloud.firestore {
     }
 
     match /profiles/{uid} {
-      allow read: if isAdmin()
-        || owns(uid)
+      allow read: if owns(uid)
+        || isAdmin()
         || resource.data.verified == true
         || isLegacyPublicProfile();
 
@@ -169,6 +181,11 @@ service cloud.firestore {
         && request.resource.data.companyId == resource.data.companyId
         && request.resource.data.featured == resource.data.featured
         && request.resource.data.createdAt == resource.data.createdAt
+        && (
+          request.resource.data.status == 'active'
+          || request.resource.data.status == 'paused'
+          || request.resource.data.status == 'closed'
+        )
         && request.resource.data.keys().hasOnly([
           'companyId', 'companyName', 'companyLogo', 'title', 'category',
           'modality', 'location', 'jobType', 'salary', 'description',
@@ -189,8 +206,10 @@ service cloud.firestore {
           && request.resource.data.applicantId == request.auth.uid
           && request.resource.data.applicantProfileId == request.auth.uid
           && request.resource.data.jobId == jobId
+          && exists(/databases/$(database)/documents/jobPosts/$(jobId))
           && get(/databases/$(database)/documents/jobPosts/$(jobId)).data.status == 'active'
           && request.resource.data.companyId == get(/databases/$(database)/documents/jobPosts/$(jobId)).data.companyId
+          && exists(/databases/$(database)/documents/profiles/$(request.auth.uid))
           && get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data.kind != 'empresa'
           && request.resource.data.status == 'sent'
           && request.resource.data.keys().hasOnly([
@@ -206,6 +225,12 @@ service cloud.firestore {
           && request.resource.data.companyId == resource.data.companyId
           && request.resource.data.applicantId == resource.data.applicantId
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
+          && (
+            request.resource.data.status == 'sent'
+            || request.resource.data.status == 'viewed'
+            || request.resource.data.status == 'shortlisted'
+            || request.resource.data.status == 'rejected'
+          )
         );
 
         allow delete: if isAdmin()
