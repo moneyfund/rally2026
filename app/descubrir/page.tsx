@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { DiscoverClient } from "@/components/DiscoverClient";
+import "./discover-actions.css";
 
 export const metadata: Metadata = {
   title: "Descubrir",
