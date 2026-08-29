@@ -313,3 +313,16 @@
   .job-apply-card { position: static; }
   .admin-job-row { grid-template-columns: auto 1fr; }
 }
+
+
+/* NAVY CARD SEPARATION V1 */
+.directory-card-talent,
+.discover-job-card,
+.featured-job-card {
+  border: 2px solid #0b2e4f;
+}
+.directory-card-talent:hover,
+.discover-job-card:hover,
+.featured-job-card:hover {
+  border-color: #174b78;
+}

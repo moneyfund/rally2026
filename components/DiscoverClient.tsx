@@ -89,10 +89,10 @@ function initials(name: string) {
 }
 
 const DEMO_VENTURE_COVERS: Record<number, string> = {
-  4: "https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=1200&q=82",
-  5: "https://images.unsplash.com/photo-1452860606245-08befc0ff44b?auto=format&fit=crop&w=1200&q=82",
-  7: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=82",
-  8: "https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1200&q=82",
+  4: "https://images.unsplash.com/photo-1778399950106-1433820eb601?auto=format&fit=crop&w=1200&q=82",
+  5: "https://images.unsplash.com/photo-1759523146335-0069847ceb16?auto=format&fit=crop&w=1200&q=82",
+  7: "https://images.unsplash.com/photo-1737529807163-1d8a3fb6c403?auto=format&fit=crop&w=1200&q=82",
+  8: "https://images.unsplash.com/photo-1758611971329-94fa9d6aa8a5?auto=format&fit=crop&w=1200&q=82",
 };
 
 const demoDirectory: DirectoryProfile[] = demoProfiles.map((profile) => ({
@@ -226,7 +226,8 @@ function DirectoryCard({ profile }: { profile: DirectoryProfile }) {
   const label = profile.kind === "empresa" ? "Empresa" : "Talento";
   const href = profile.uid ? `/perfil/${profile.uid}` : undefined;
   const content = <><div className="directory-card-head"><span className="directory-avatar">{profile.avatarUrl ? <img src={profile.avatarUrl} alt="" /> : initials(profile.name)}</span><div><span>{label}</span><h3>{profile.name}</h3><p>{profile.role}</p></div>{profile.verified ? <BadgeCheck size={18} className="directory-verified" /> : null}</div><p className="directory-description">{profile.description}</p><div className="directory-tags">{profile.skills.slice(0, 3).map((skill) => <span key={skill}>{skill}</span>)}</div><div className="directory-card-footer"><span><MapPin size={14} /> {profile.location}</span><strong>{href ? "Ver perfil" : "Perfil demostrativo"} {href ? <ArrowRight size={14} /> : null}</strong></div></>;
-  return href ? <Link href={href} className="directory-card">{content}</Link> : <article className="directory-card">{content}</article>;
+  const cardClass = profile.kind === "persona" ? "directory-card directory-card-talent" : "directory-card";
+  return href ? <Link href={href} className={cardClass}>{content}</Link> : <article className={cardClass}>{content}</article>;
 }
 
 function VentureDirectoryCard({ profile }: { profile: DirectoryProfile }) {
