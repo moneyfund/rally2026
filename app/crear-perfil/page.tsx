@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { CreateProfileForm } from "@/components/CreateProfileForm";
+import { CreateProfileIntroVideo } from "@/components/CreateProfileIntroVideo";
 import "./crear-perfil.css";
 
 export const metadata: Metadata = { title: "Crear cuenta" };
@@ -17,11 +18,7 @@ export default function CrearPerfilPage() {
       </section>
 
       <section className="create-profile-video-stage" aria-label="Video de introducción">
-        <div className="create-profile-video-frame">
-          <video autoPlay muted playsInline preload="auto">
-            <source src="/germina-crear-perfil.mp4" type="video/mp4" />
-          </video>
-        </div>
+        <CreateProfileIntroVideo />
       </section>
 
       <section className="section create-profile-form-section">
