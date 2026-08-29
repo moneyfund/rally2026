@@ -10,7 +10,9 @@ import { signInWithGoogle } from "@/lib/google-auth";
 import type { ProfileKind } from "@/lib/profile-types";
 
 const profileCategories = ["Diseño", "Tecnología", "Fotografía", "Gastronomía", "Artesanía", "Servicios"];
+const ventureCategories = ["Agroindustria", "Economía circular", "Alimentos y bebidas", "Agricultura", "Artesanía", "Comercio", "Industria creativa", "Moda", "Servicios", "Tecnología", "Turismo", "Otros"];
 const companyCategories = ["Tecnología", "Construcción", "Finanzas", "Comercio", "Servicios profesionales", "Industria", "Turismo", "Educación", "Salud", "Logística", "Otros"];
+const ventureNeedsOptions = ["Clientes", "Alianzas comerciales", "Proveedores", "Financiamiento", "Espacios para comercialización", "Instituciones interesadas"];
 
 function routeForKind(kind: ProfileKind) {
   return kind === "empresa" ? "/mi-empresa" : "/mi-perfil";
@@ -110,6 +112,20 @@ export function CreateProfileForm() {
         .split(",")
         .map((skill) => skill.trim())
         .filter(Boolean);
+      const ventureProductNames = String(form.get("products") ?? "")
+        .split(",")
+        .map((product) => product.trim())
+        .filter(Boolean);
+      const ventureNeeds = form.getAll("ventureNeeds").map(String);
+      const products = kind === "negocio" ? ventureProductNames.map((productName) => ({
+        id: crypto.randomUUID(),
+        name: productName,
+        description: "",
+        price: "",
+        availability: "Consultar disponibilidad",
+        imageUrl: "",
+        storagePath: "",
+      })) : [];
 
       const userRef = doc(db, "users", uid);
       const profileRef = doc(db, "profiles", uid);
@@ -150,6 +166,8 @@ export function CreateProfileForm() {
         description,
         skills,
         services: skills,
+        products,
+        ventureNeeds: kind === "negocio" ? ventureNeeds : [],
         socialLinks: {
           website,
           whatsapp: phone,
@@ -203,13 +221,13 @@ export function CreateProfileForm() {
     );
   }
 
-  const categories = kind === "empresa" ? companyCategories : profileCategories;
+  const categories = kind === "empresa" ? companyCategories : kind === "negocio" ? ventureCategories : profileCategories;
 
   return (
     <form className="profile-form" onSubmit={handleSubmit}>
       <div className="profile-type-grid profile-type-grid-three">
         <button type="button" className={kind === "persona" ? "type-card active" : "type-card"} onClick={() => setKind("persona")}><UserRound size={23} /><strong>Soy talento</strong><span>Quiero mostrar mis habilidades y servicios.</span></button>
-        <button type="button" className={kind === "negocio" ? "type-card active" : "type-card"} onClick={() => setKind("negocio")}><BriefcaseBusiness size={23} /><strong>Tengo un emprendimiento</strong><span>Quiero promocionar mi negocio y sus servicios.</span></button>
+        <button type="button" className={kind === "negocio" ? "type-card active" : "type-card"} onClick={() => setKind("negocio")}><BriefcaseBusiness size={23} /><strong>Tengo un emprendimiento</strong><span>Quiero mostrar productos, servicios y lo que estoy buscando.</span></button>
         <button type="button" className={kind === "empresa" ? "type-card active" : "type-card"} onClick={() => setKind("empresa")}><Building2 size={23} /><strong>Represento una empresa</strong><span>Quiero publicar vacantes y gestionar postulaciones.</span></button>
       </div>
 
@@ -229,11 +247,11 @@ export function CreateProfileForm() {
         </>
       )}
 
-      <div className="form-section-title"><span>2</span><div><strong>{kind === "empresa" ? "Información empresarial" : "Tu perfil público"}</strong><small>{kind === "empresa" ? "Estos datos serán revisados por administración antes de publicar la empresa." : "Esta información será visible cuando el perfil sea aprobado."}</small></div></div>
+      <div className="form-section-title"><span>2</span><div><strong>{kind === "empresa" ? "Información empresarial" : kind === "negocio" ? "Información del emprendimiento" : "Tu perfil público"}</strong><small>{kind === "empresa" ? "Estos datos serán revisados por administración antes de publicar la empresa." : kind === "negocio" ? "Esta información alimentará la tarjeta y el perfil público de tu emprendimiento." : "Esta información será visible cuando el perfil sea aprobado."}</small></div></div>
       <div className="form-grid">
-        <label><span>{kind === "persona" ? "Nombre completo" : kind === "empresa" ? "Nombre comercial" : "Nombre del emprendimiento"}</span><input key={googleUser?.uid ?? "manual-name"} name="name" required defaultValue={googleUser?.displayName ?? ""} placeholder={kind === "persona" ? "Ej. Ana Martínez" : kind === "empresa" ? "Ej. Grupo Horizonte" : "Ej. Taller Norte"} /></label>
+        <label><span>{kind === "persona" ? "Nombre completo" : kind === "empresa" ? "Nombre comercial" : "Nombre del emprendimiento"}</span><input key={googleUser?.uid ?? "manual-name"} name="name" required defaultValue={googleUser?.displayName ?? ""} placeholder={kind === "persona" ? "Ej. Ana Martínez" : kind === "empresa" ? "Ej. Grupo Horizonte" : "Ej. Biocafé"} /></label>
         <label><span>{kind === "empresa" ? "Sector" : "Categoría"}</span><select name="category" required defaultValue=""><option value="" disabled>Seleccioná una opción</option>{categories.map((item) => <option key={item}>{item}</option>)}</select></label>
-        <label><span>Ciudad / departamento</span><div className="input-icon"><MapPin size={16} /><input name="location" required placeholder="Ej. Managua" /></div></label>
+        <label><span>Ciudad / departamento</span><div className="input-icon"><MapPin size={16} /><input name="location" required placeholder="Ej. Matagalpa" /></div></label>
         <label><span>Teléfono o WhatsApp</span><input name="phone" placeholder="+505 8888 8888" /></label>
 
         {kind === "empresa" ? (
@@ -246,6 +264,14 @@ export function CreateProfileForm() {
             <label className="form-span"><span>Presentación de la empresa</span><input name="headline" required placeholder="Ej. Tecnología nicaragüense enfocada en soluciones financieras" /></label>
             <label className="form-span"><span>Descripción</span><textarea name="description" required rows={5} placeholder="Contanos qué hace la empresa, su cultura y el tipo de talento que busca." /></label>
             <label className="form-span"><span>Áreas de contratación</span><input name="skills" placeholder="Desarrollo, ventas, operaciones, diseño..." /></label>
+          </>
+        ) : kind === "negocio" ? (
+          <>
+            <label className="form-span"><span>Propuesta del emprendimiento</span><input name="headline" required placeholder="Ej. Transformamos residuos del café en oportunidades" /></label>
+            <label className="form-span"><span>Sobre el emprendimiento</span><textarea name="description" required rows={5} placeholder="Contá la historia, propósito y qué hace diferente a tu emprendimiento." /></label>
+            <label className="form-span"><span>Productos principales</span><input name="products" placeholder="Compost, café procesado, cosmética natural..." /><small>Separalos con comas. Después podrás ampliar la información de cada producto.</small></label>
+            <label className="form-span"><span>Servicios principales</span><input name="skills" placeholder="Capacitaciones, distribución, diseño, asesoría..." /><small>Separalos con comas.</small></label>
+            <div className="form-span venture-registration-needs"><span>¿Qué busca tu emprendimiento?</span><p>Seleccioná las conexiones que podrían ayudarlo a crecer.</p><div>{ventureNeedsOptions.map((item) => <label key={item}><input type="checkbox" name="ventureNeeds" value={item} /><span>{item}</span></label>)}</div></div>
           </>
         ) : (
           <>
