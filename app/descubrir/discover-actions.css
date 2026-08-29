@@ -1,0 +1,35 @@
+.directory-card-footer strong {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 0 13px;
+  border-radius: 9px;
+  background: #0b2e4f;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+  box-shadow: 0 7px 18px rgba(11, 46, 79, 0.16);
+  transition: background .2s ease, transform .2s ease, box-shadow .2s ease;
+}
+
+.directory-card:hover .directory-card-footer strong {
+  background: #174b78;
+  transform: translateY(-1px);
+  box-shadow: 0 10px 22px rgba(11, 46, 79, 0.22);
+}
+
+.directory-card-footer strong svg {
+  flex: 0 0 auto;
+}
+
+@media (max-width: 480px) {
+  .directory-card-footer strong {
+    min-height: 32px;
+    padding: 0 11px;
+    border-radius: 8px;
+  }
+}
