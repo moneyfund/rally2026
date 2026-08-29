@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, BadgeCheck, BriefcaseBusiness, Building2, MapPin, Search, SlidersHorizontal, Store, UserRound } from "lucide-react";
+import { ArrowRight, BadgeCheck, BriefcaseBusiness, Building2, Handshake, MapPin, Search, SlidersHorizontal, Store, UserRound } from "lucide-react";
 import { collection, onSnapshot, query as firestoreQuery, where, type DocumentData, type QuerySnapshot } from "firebase/firestore";
 import { useEffect, useMemo, useState } from "react";
 import { profiles as demoProfiles } from "@/lib/demo-data";
@@ -20,6 +20,8 @@ type DirectoryProfile = {
   location: string;
   description: string;
   skills: string[];
+  products: string[];
+  ventureNeeds: string[];
   avatarUrl: string;
   verified: boolean;
   available: boolean;
@@ -27,6 +29,11 @@ type DirectoryProfile = {
 };
 
 const VERIFICATION_ROLLOUT_AT = new Date("2026-08-28T22:51:00.000Z");
+
+function productNames(value: unknown) {
+  if (!Array.isArray(value)) return [];
+  return value.map((item) => typeof item === "string" ? item : item && typeof item === "object" ? String((item as Record<string, unknown>).name ?? "") : "").filter(Boolean);
+}
 
 function snapshotToProfiles(snapshot: QuerySnapshot<DocumentData>): DirectoryProfile[] {
   return snapshot.docs.map((item) => {
@@ -43,6 +50,8 @@ function snapshotToProfiles(snapshot: QuerySnapshot<DocumentData>): DirectoryPro
       location: String(data.location ?? "Nicaragua"),
       description: String(data.description ?? "Perfil creado en Germina."),
       skills,
+      products: productNames(data.products),
+      ventureNeeds: Array.isArray(data.ventureNeeds) ? data.ventureNeeds.map(String) : [],
       avatarUrl: String(data.avatarUrl ?? data.googlePhotoUrl ?? ""),
       verified: data.verified === true || data.verificationStatus == null,
       available: data.available !== false,
@@ -86,6 +95,8 @@ const demoDirectory: DirectoryProfile[] = demoProfiles.map((profile) => ({
   location: profile.location,
   description: profile.description,
   skills: profile.skills,
+  products: profile.kind === "negocio" ? profile.skills.slice(0, 3) : [],
+  ventureNeeds: profile.kind === "negocio" ? ["Clientes", "Alianzas comerciales"] : [],
   avatarUrl: "",
   verified: Boolean(profile.verified),
   available: profile.available !== false,
@@ -130,7 +141,7 @@ export function DiscoverClient() {
     return allProfiles.filter((profile) => {
       if (profile.kind !== kind) return false;
       if (category !== "Todos" && profile.category !== category) return false;
-      const haystack = `${profile.name} ${profile.role} ${profile.location} ${profile.category} ${profile.skills.join(" ")} ${profile.description}`.toLowerCase();
+      const haystack = `${profile.name} ${profile.role} ${profile.location} ${profile.category} ${profile.skills.join(" ")} ${profile.products.join(" ")} ${profile.ventureNeeds.join(" ")} ${profile.description}`.toLowerCase();
       return !normalized || haystack.includes(normalized);
     });
   }, [allProfiles, directory, category, normalized]);
@@ -164,14 +175,14 @@ export function DiscoverClient() {
       <section className="discover-search-surface">
         <div className="discover-search-copy"><span>DESCUBRIR GERMINA</span><h1>Encontrá talento, emprendimientos, empresas y oportunidades.</h1></div>
         <div className="discover-toolbar discover-toolbar-premium">
-          <label className="search-box discover-main-search"><Search size={20} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={directory === "empresas" ? "Buscá empresas, vacantes, áreas o ciudades" : "Buscá por habilidad, nombre, servicio o ciudad"} /></label>
+          <label className="search-box discover-main-search"><Search size={20} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={directory === "empresas" ? "Buscá empresas, vacantes, áreas o ciudades" : directory === "emprendimientos" ? "Buscá emprendimientos, productos, servicios o necesidades" : "Buscá por habilidad, nombre, servicio o ciudad"} /></label>
           <button type="button" className="filter-button"><SlidersHorizontal size={17} /> Filtros</button>
         </div>
       </section>
 
       <section className="discover-main-tabs" aria-label="Categorías principales">
         <button type="button" className={directory === "talentos" ? "active" : ""} onClick={() => switchDirectory("talentos")}><span><UserRound size={22} /></span><div><strong>Talentos</strong><small>Personas, habilidades y profesionales</small></div><ArrowRight size={17} /></button>
-        <button type="button" className={directory === "emprendimientos" ? "active" : ""} onClick={() => switchDirectory("emprendimientos")}><span><Store size={22} /></span><div><strong>Emprendimientos</strong><small>Negocios locales, servicios y marcas</small></div><ArrowRight size={17} /></button>
+        <button type="button" className={directory === "emprendimientos" ? "active" : ""} onClick={() => switchDirectory("emprendimientos")}><span><Store size={22} /></span><div><strong>Emprendimientos</strong><small>Productos, servicios y conexiones</small></div><ArrowRight size={17} /></button>
         <button type="button" className={directory === "empresas" ? "active" : ""} onClick={() => switchDirectory("empresas")}><span><Building2 size={22} /></span><div><strong>Empresas</strong><small>Organizaciones verificadas y vacantes</small></div><ArrowRight size={17} /></button>
       </section>
 
@@ -191,8 +202,8 @@ export function DiscoverClient() {
         </>
       ) : (
         <section className="discover-section-block">
-          <div className="discover-section-head"><div><span>{directory === "talentos" ? "TALENTO" : "EMPRENDIMIENTOS"}</span><h2>{directory === "talentos" ? "Personas listas para crear, resolver y crecer" : "Negocios locales listos para conectar"}</h2></div><strong>{currentProfiles.length} resultados</strong></div>
-          {currentProfiles.length ? <div className="discover-profile-grid">{currentProfiles.map((profile) => <DirectoryCard key={profile.id} profile={profile} />)}</div> : <div className="discover-empty-premium"><Search size={28} /><h3>No encontramos coincidencias</h3><p>Probá otra habilidad, ciudad o categoría.</p></div>}
+          <div className="discover-section-head"><div><span>{directory === "talentos" ? "TALENTO" : "EMPRENDIMIENTOS"}</span><h2>{directory === "talentos" ? "Personas listas para crear, resolver y crecer" : "Emprendimientos que ofrecen y también buscan conexiones"}</h2></div><strong>{currentProfiles.length} resultados</strong></div>
+          {currentProfiles.length ? <div className={directory === "emprendimientos" ? "venture-directory-grid" : "discover-profile-grid"}>{currentProfiles.map((profile) => <DirectoryCard key={profile.id} profile={profile} />)}</div> : <div className="discover-empty-premium"><Search size={28} /><h3>No encontramos coincidencias</h3><p>Probá otra habilidad, ciudad o categoría.</p></div>}
         </section>
       )}
     </div>
@@ -200,8 +211,28 @@ export function DiscoverClient() {
 }
 
 function DirectoryCard({ profile }: { profile: DirectoryProfile }) {
-  const label = profile.kind === "empresa" ? "Empresa" : profile.kind === "negocio" ? "Emprendimiento" : "Talento";
+  if (profile.kind === "negocio") return <VentureDirectoryCard profile={profile} />;
+
+  const label = profile.kind === "empresa" ? "Empresa" : "Talento";
   const href = profile.uid ? `/perfil/${profile.uid}` : undefined;
   const content = <><div className="directory-card-head"><span className="directory-avatar">{profile.avatarUrl ? <img src={profile.avatarUrl} alt="" /> : initials(profile.name)}</span><div><span>{label}</span><h3>{profile.name}</h3><p>{profile.role}</p></div>{profile.verified ? <BadgeCheck size={18} className="directory-verified" /> : null}</div><p className="directory-description">{profile.description}</p><div className="directory-tags">{profile.skills.slice(0, 3).map((skill) => <span key={skill}>{skill}</span>)}</div><div className="directory-card-footer"><span><MapPin size={14} /> {profile.location}</span><strong>{href ? "Ver perfil" : "Perfil demostrativo"} {href ? <ArrowRight size={14} /> : null}</strong></div></>;
   return href ? <Link href={href} className="directory-card">{content}</Link> : <article className="directory-card">{content}</article>;
+}
+
+function VentureDirectoryCard({ profile }: { profile: DirectoryProfile }) {
+  const href = profile.uid ? `/perfil/${profile.uid}` : undefined;
+  const products = profile.products.length ? profile.products : profile.skills;
+  const content = <>
+    <div className="venture-directory-head">
+      <span className="venture-directory-logo">{profile.avatarUrl ? <img src={profile.avatarUrl} alt="" /> : initials(profile.name)}</span>
+      <div><span>EMPRENDIMIENTO</span><h3>{profile.name}</h3><p><Store size={14} /> {profile.category}</p></div>
+      {profile.verified ? <em><BadgeCheck size={15} /> Verificado</em> : null}
+    </div>
+    <div className="venture-directory-location"><MapPin size={15} /> {profile.location}</div>
+    <p className="venture-directory-description">{profile.description}</p>
+    <div className="venture-directory-products"><strong>Productos</strong>{products.length ? <ul>{products.slice(0, 3).map((product) => <li key={product}>{product}</li>)}</ul> : <span>Próximamente más información.</span>}</div>
+    <div className="venture-directory-needs"><strong><Handshake size={15} /> Busca:</strong>{profile.ventureNeeds.length ? <div>{profile.ventureNeeds.slice(0, 3).map((need) => <span key={need}>{need}</span>)}</div> : <span>Conexiones y oportunidades</span>}</div>
+    <div className="venture-directory-footer"><span>{profile.role}</span><strong>{href ? "Ver emprendimiento" : "Perfil demostrativo"} {href ? <ArrowRight size={14} /> : null}</strong></div>
+  </>;
+  return href ? <Link href={href} className="venture-directory-card">{content}</Link> : <article className="venture-directory-card">{content}</article>;
 }
