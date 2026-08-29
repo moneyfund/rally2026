@@ -25,29 +25,37 @@
 .create-profile-video-stage {
   display: flex;
   justify-content: center;
+  align-items: flex-start;
   padding: 42px 20px 22px;
   background: #fff;
 }
 
 .create-profile-video-frame {
-  width: min(520px,100%);
-  border-radius: 26px;
+  /* El archivo original es 1080x1440: relación vertical 3:4. */
+  width: min(100%, 480px, calc(68vh * 0.75));
+  aspect-ratio: 3 / 4;
+  border-radius: clamp(18px, 2vw, 26px);
   overflow: hidden;
-  background: #071d36;
-  box-shadow: 0 24px 70px rgba(7,29,54,.14);
+  background: transparent;
+  box-shadow: 0 20px 60px rgba(7,29,54,.12);
 }
 
 .create-profile-video-frame video {
   display: block;
   width: 100%;
-  height: auto;
-  aspect-ratio: 3 / 4;
+  height: 100%;
   object-fit: contain;
-  background: #071d36;
+  background: transparent;
 }
 
 .create-profile-form-section {
   padding-top: 54px;
+}
+
+@media (max-width: 900px) {
+  .create-profile-video-frame {
+    width: min(84vw, 450px, calc(66vh * 0.75));
+  }
 }
 
 @media (max-width: 720px) {
@@ -60,11 +68,18 @@
   }
 
   .create-profile-video-stage {
-    padding-top: 30px;
+    padding: 30px 16px 16px;
   }
 
   .create-profile-video-frame {
-    width: min(430px,100%);
-    border-radius: 20px;
+    width: min(92vw, 420px, calc(64vh * 0.75));
+    border-radius: 18px;
+  }
+}
+
+@media (max-width: 420px) {
+  .create-profile-video-frame {
+    width: min(94vw, calc(62vh * 0.75));
+    border-radius: 16px;
   }
 }
