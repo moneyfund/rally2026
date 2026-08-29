@@ -19,10 +19,30 @@ import {
 import { collection, doc, onSnapshot, query, where } from "firebase/firestore";
 import { useEffect, useMemo, useState } from "react";
 import { db } from "@/lib/firebase";
-import { emptyProfile, type GerminaProfile } from "@/lib/profile-types";
+import { emptyProfile, type GerminaProfile, type VentureProduct } from "@/lib/profile-types";
 import type { JobPost } from "@/lib/marketplace-types";
 import { nicaraguaWhatsappUrl } from "@/lib/whatsapp";
 import { GoogleMapEmbed } from "@/components/GoogleMapEmbed";
+import { VenturePublicProfile } from "@/components/VenturePublicProfile";
+
+function normalizeProducts(value: unknown): VentureProduct[] {
+  if (!Array.isArray(value)) return [];
+  return value.map((item, index) => {
+    if (typeof item === "string") {
+      return { id: `legacy-${index}`, name: item, description: "", price: "", availability: "Consultar disponibilidad", imageUrl: "", storagePath: "" };
+    }
+    const data = item && typeof item === "object" ? item as Record<string, unknown> : {};
+    return {
+      id: String(data.id ?? `product-${index}`),
+      name: String(data.name ?? "Producto"),
+      description: String(data.description ?? ""),
+      price: String(data.price ?? ""),
+      availability: String(data.availability ?? "Consultar disponibilidad"),
+      imageUrl: String(data.imageUrl ?? ""),
+      storagePath: String(data.storagePath ?? ""),
+    };
+  });
+}
 
 function normalizeProfile(uid: string, data: Record<string, unknown>): GerminaProfile {
   const social = data.socialLinks && typeof data.socialLinks === "object" ? data.socialLinks as Record<string, unknown> : {};
@@ -53,6 +73,8 @@ function normalizeProfile(uid: string, data: Record<string, unknown>): GerminaPr
       tiktok: String(social.tiktok ?? ""),
     },
     services: Array.isArray(data.services) ? data.services.map(String) : Array.isArray(data.skills) ? data.skills.map(String) : [],
+    products: normalizeProducts(data.products),
+    ventureNeeds: Array.isArray(data.ventureNeeds) ? data.ventureNeeds.map(String) : [],
     avatarUrl: String(data.avatarUrl ?? ""),
     googlePhotoUrl: String(data.googlePhotoUrl ?? ""),
     coverUrl: String(data.coverUrl ?? ""),
@@ -142,9 +164,14 @@ export function PublicProfile({ uid }: { uid: string }) {
 
   const whatsappUrl = nicaraguaWhatsappUrl(profile.socialLinks.whatsapp || profile.phone);
   const mapsUrl = directionsUrl(profile);
+
+  if (profile.kind === "negocio") {
+    return <VenturePublicProfile profile={profile} whatsappUrl={whatsappUrl} mapsUrl={mapsUrl} />;
+  }
+
   const showMap = profile.locationPublic && Boolean(profile.coordinates);
   const isCompany = profile.kind === "empresa";
-  const profileType = isCompany ? "EMPRESA" : profile.kind === "negocio" ? "EMPRENDIMIENTO" : "TALENTO GERMINA";
+  const profileType = isCompany ? "EMPRESA" : "TALENTO GERMINA";
 
   return (
     <main className="public-profile-page">
@@ -168,7 +195,7 @@ export function PublicProfile({ uid }: { uid: string }) {
         </div>
 
         <aside className="public-profile-aside">
-          <section className="public-contact-card"><span className="eyebrow">CONECTÁ</span><h3>{isCompany ? "Conocé y contactá esta empresa." : profile.kind === "negocio" ? "Encontrá este emprendimiento fuera de Germina." : "Encontrá este talento fuera de Germina."}</h3><div className="public-social-links">{profile.socialLinks.website ? <a href={externalUrl(profile.socialLinks.website)} target="_blank" rel="noreferrer"><Globe2 size={17} /><span>Sitio web</span><span>↗</span></a> : null}{profile.socialLinks.instagram ? <a href={externalUrl(profile.socialLinks.instagram)} target="_blank" rel="noreferrer"><Instagram size={17} /><span>Instagram</span><span>↗</span></a> : null}{profile.socialLinks.facebook ? <a href={externalUrl(profile.socialLinks.facebook)} target="_blank" rel="noreferrer"><AtSign size={17} /><span>Facebook</span><span>↗</span></a> : null}{profile.socialLinks.tiktok ? <a href={externalUrl(profile.socialLinks.tiktok)} target="_blank" rel="noreferrer"><Music2 size={17} /><span>TikTok</span><span>↗</span></a> : null}{whatsappUrl ? <a href={whatsappUrl} target="_blank" rel="noreferrer"><MessageCircle size={17} /><span>WhatsApp</span><span>↗</span></a> : null}{mapsUrl ? <a href={mapsUrl} target="_blank" rel="noreferrer"><Navigation size={17} /><span>Cómo llegar</span><span>↗</span></a> : null}</div></section>
+          <section className="public-contact-card"><span className="eyebrow">CONECTÁ</span><h3>{isCompany ? "Conocé y contactá esta empresa." : "Encontrá este talento fuera de Germina."}</h3><div className="public-social-links">{profile.socialLinks.website ? <a href={externalUrl(profile.socialLinks.website)} target="_blank" rel="noreferrer"><Globe2 size={17} /><span>Sitio web</span><span>↗</span></a> : null}{profile.socialLinks.instagram ? <a href={externalUrl(profile.socialLinks.instagram)} target="_blank" rel="noreferrer"><Instagram size={17} /><span>Instagram</span><span>↗</span></a> : null}{profile.socialLinks.facebook ? <a href={externalUrl(profile.socialLinks.facebook)} target="_blank" rel="noreferrer"><AtSign size={17} /><span>Facebook</span><span>↗</span></a> : null}{profile.socialLinks.tiktok ? <a href={externalUrl(profile.socialLinks.tiktok)} target="_blank" rel="noreferrer"><Music2 size={17} /><span>TikTok</span><span>↗</span></a> : null}{whatsappUrl ? <a href={whatsappUrl} target="_blank" rel="noreferrer"><MessageCircle size={17} /><span>WhatsApp</span><span>↗</span></a> : null}{mapsUrl ? <a href={mapsUrl} target="_blank" rel="noreferrer"><Navigation size={17} /><span>Cómo llegar</span><span>↗</span></a> : null}</div></section>
           {isCompany ? <section className="public-profile-safety"><Building2 size={18} /><div><strong>Perfil empresarial verificado</strong><p>Las empresas pasan por revisión administrativa antes de publicar vacantes y aparecer en el directorio.</p></div></section> : <section className="public-profile-safety"><BadgeCheck size={18} /><div><strong>Privacidad en Germina</strong><p>La ubicación exacta solo aparece cuando el propietario activa voluntariamente su publicación.</p></div></section>}
         </aside>
       </div>
