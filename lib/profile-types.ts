@@ -21,9 +21,11 @@ export type PortfolioItem = {
   createdAt: number;
 };
 
+export type ProfileKind = "persona" | "negocio" | "empresa";
+
 export type GerminaProfile = {
   ownerId: string;
-  kind: "persona" | "negocio";
+  kind: ProfileKind;
   name: string;
   category: string;
   profession: string;
@@ -42,6 +44,11 @@ export type GerminaProfile = {
   available: boolean;
   verified: boolean;
   status: string;
+  legalName: string;
+  companyEmail: string;
+  website: string;
+  representativeName: string;
+  representativeRole: string;
 };
 
 export type LegalDocument = {
@@ -83,5 +90,10 @@ export function emptyProfile(uid = ""): GerminaProfile {
     available: true,
     verified: false,
     status: "active",
+    legalName: "",
+    companyEmail: "",
+    website: "",
+    representativeName: "",
+    representativeRole: "",
   };
 }

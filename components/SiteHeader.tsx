@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ArrowRight, Menu, ShieldCheck, UserRound, X } from "lucide-react";
+import { ArrowRight, Building2, Menu, ShieldCheck, UserRound, X } from "lucide-react";
 import { onAuthStateChanged, type User } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
 import { useEffect, useState } from "react";
-import { auth } from "@/lib/firebase";
+import { auth, db } from "@/lib/firebase";
 
 const ADMIN_EMAIL = "norvingarcia220@gmail.com";
 
@@ -20,17 +21,31 @@ export function SiteHeader() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
+  const [accountType, setAccountType] = useState("");
   const [scrolled, setScrolled] = useState(false);
   const isHome = pathname === "/";
 
-  useEffect(() => onAuthStateChanged(auth, setUser), []);
+  useEffect(() => onAuthStateChanged(auth, async (currentUser) => {
+    setUser(currentUser);
+    setAccountType("");
+    if (!currentUser) return;
+    if ((currentUser.email ?? "").trim().toLowerCase() === ADMIN_EMAIL) {
+      setAccountType("admin");
+      return;
+    }
+    try {
+      const account = await getDoc(doc(db, "users", currentUser.uid));
+      setAccountType(String(account.data()?.accountType ?? ""));
+    } catch {
+      setAccountType("");
+    }
+  }), []);
 
   useEffect(() => {
     if (!isHome) {
       setScrolled(true);
       return;
     }
-
     const updateHeader = () => setScrolled(window.scrollY > 44);
     updateHeader();
     window.addEventListener("scroll", updateHeader, { passive: true });
@@ -39,14 +54,17 @@ export function SiteHeader() {
 
   useEffect(() => setOpen(false), [pathname]);
 
-  const isAdminUser = (user?.email ?? "").trim().toLowerCase() === ADMIN_EMAIL;
+  const isAdminUser = accountType === "admin" || (user?.email ?? "").trim().toLowerCase() === ADMIN_EMAIL;
+  const isCompanyUser = accountType === "empresa";
+  const accountHref = isAdminUser ? "/admin" : isCompanyUser ? "/mi-empresa" : "/mi-perfil";
+  const accountLabel = isAdminUser ? "Administración" : isCompanyUser ? "Mi empresa" : "Mi perfil";
 
   const accountLink = user ? (
-    <Link href={isAdminUser ? "/admin" : "/mi-perfil"} className="header-account" onClick={() => setOpen(false)}>
+    <Link href={accountHref} className="header-account" onClick={() => setOpen(false)}>
       <span className="header-account-avatar">
-        {user.photoURL ? <img src={user.photoURL} alt="" /> : isAdminUser ? <ShieldCheck size={16} /> : <UserRound size={16} />}
+        {user.photoURL ? <img src={user.photoURL} alt="" /> : isAdminUser ? <ShieldCheck size={16} /> : isCompanyUser ? <Building2 size={16} /> : <UserRound size={16} />}
       </span>
-      <span>{isAdminUser ? "Administración" : "Mi perfil"}</span>
+      <span>{accountLabel}</span>
     </Link>
   ) : null;
 
@@ -63,11 +81,7 @@ export function SiteHeader() {
         </Link>
 
         <nav className={`nav ${open ? "nav-open" : ""}`} aria-label="Navegación principal">
-          {navItems.map((item) => (
-            <Link key={item.href} href={item.href} className={pathname === item.href ? "active" : ""} onClick={() => setOpen(false)}>
-              {item.label}
-            </Link>
-          ))}
+          {navItems.map((item) => <Link key={item.href} href={item.href} className={pathname === item.href ? "active" : ""} onClick={() => setOpen(false)}>{item.label}</Link>)}
           <div className="mobile-nav-actions">
             {user ? accountLink : <><Link href="/entrar" className="btn btn-ghost" onClick={() => setOpen(false)}>Entrar</Link><Link href="/crear-perfil" className="btn btn-primary" onClick={() => setOpen(false)}>Crear perfil <ArrowRight size={16} /></Link></>}
           </div>
@@ -77,9 +91,7 @@ export function SiteHeader() {
           {user ? accountLink : <><Link href="/entrar" className="btn btn-ghost">Entrar</Link><Link href="/crear-perfil" className="btn btn-primary">Crear perfil <ArrowRight size={16} /></Link></>}
         </div>
 
-        <button className="menu-button" type="button" onClick={() => setOpen((value) => !value)} aria-label="Abrir menú">
-          {open ? <X size={22} /> : <Menu size={22} />}
-        </button>
+        <button className="menu-button" type="button" onClick={() => setOpen((value) => !value)} aria-label="Abrir menú">{open ? <X size={22} /> : <Menu size={22} />}</button>
       </div>
     </header>
   );

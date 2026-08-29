@@ -4,6 +4,7 @@ import { HeroCarousel } from "@/components/HeroCarousel";
 import { MovingTicker } from "@/components/MovingTicker";
 import { RealMap } from "@/components/RealMap";
 import { TalentCard } from "@/components/TalentCard";
+import { FeaturedJobs } from "@/components/FeaturedJobs";
 import { profiles, stats } from "@/lib/demo-data";
 
 export default function Home() {
@@ -16,12 +17,12 @@ export default function Home() {
         <div className="shell">
           <div className="section-head split-head">
             <div><span className="eyebrow">UNA VITRINA PARA LO QUE SABÉS HACER</span><h2>Tu talento no debería depender de que alguien lo descubra por casualidad.</h2></div>
-            <p>Germina convierte habilidades, oficios y emprendimientos en perfiles visibles, buscables y conectados con personas o empresas que necesitan exactamente eso.</p>
+            <p>Germina convierte habilidades, oficios, emprendimientos y empresas en perfiles visibles, buscables y conectados con oportunidades reales.</p>
           </div>
           <div className="value-grid">
             <article><span><UsersRound size={22} /></span><h3>Mostrá quién sos</h3><p>Un perfil pensado para habilidades, portafolio, ubicación y disponibilidad.</p><Link href="/crear-perfil">Crear perfil <ArrowRight size={15} /></Link></article>
-            <article><span><Search size={22} /></span><h3>Dejate encontrar</h3><p>Aparecé en búsquedas por categoría, ciudad, habilidad y tipo de servicio.</p><Link href="/descubrir">Explorar talento <ArrowRight size={15} /></Link></article>
-            <article><span><BriefcaseBusiness size={22} /></span><h3>Conectá con demanda</h3><p>Empresas y clientes pueden encontrar capacidad local antes de buscar lejos.</p><Link href="/empresas">Para empresas <ArrowRight size={15} /></Link></article>
+            <article><span><Search size={22} /></span><h3>Dejate encontrar</h3><p>Aparecé en búsquedas por categoría, ciudad, habilidad y tipo de servicio.</p><Link href="/descubrir">Explorar Germina <ArrowRight size={15} /></Link></article>
+            <article><span><BriefcaseBusiness size={22} /></span><h3>Conectá con oportunidades</h3><p>Empresas verificadas pueden publicar vacantes y conectar directamente con talento local.</p><Link href="/crear-perfil">Registrar empresa <ArrowRight size={15} /></Link></article>
           </div>
         </div>
       </section>
@@ -35,6 +36,8 @@ export default function Home() {
           <div className="talent-grid home-talent-grid">{profiles.slice(0, 4).map((profile) => <TalentCard profile={profile} key={profile.id} />)}</div>
         </div>
       </section>
+
+      <FeaturedJobs />
 
       <section className="section map-home-section">
         <div className="shell">
@@ -51,7 +54,7 @@ export default function Home() {
         <div className="shell impact-card">
           <div><span className="eyebrow eyebrow-light"><Sparkles size={14} /> DEL HOBBY AL NEGOCIO</span><h2>Una plataforma para que una habilidad pueda convertirse en el comienzo de algo más grande.</h2></div>
           <div className="impact-stats">{stats.map((stat) => <div key={stat.value + stat.label}><strong>{stat.value}</strong><span>{stat.label}</span></div>)}</div>
-          <div className="impact-actions"><Link href="/crear-perfil" className="btn btn-light btn-lg">Quiero germinar mi talento <ArrowRight size={18} /></Link><span><BadgeCheck size={17} /> Versión demostrativa · Rally Nacional 2026</span></div>
+          <div className="impact-actions"><Link href="/crear-perfil" className="btn btn-light btn-lg">Quiero germinar mi talento <ArrowRight size={18} /></Link><span><BadgeCheck size={17} /> Rally Nacional 2026</span></div>
         </div>
       </section>
     </main>

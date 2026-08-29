@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { ProfileWorkspaceV2 } from "@/components/ProfileWorkspaceV2";
+import { AccountProfileGate } from "@/components/AccountProfileGate";
 
 export const metadata: Metadata = {
   title: "Mi perfil",
@@ -7,5 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function MiPerfilPage() {
-  return <ProfileWorkspaceV2 />;
+  return <AccountProfileGate />;
 }

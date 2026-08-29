@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowRight, CheckCircle2, LockKeyhole, Mail } from "lucide-react";
+import { ArrowRight, LockKeyhole, Mail } from "lucide-react";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { useState } from "react";
@@ -21,7 +21,6 @@ export function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState(false);
 
   async function completeSignIn(user: { uid: string; email: string | null }) {
     if (isAdminEmail(user.email)) {
@@ -30,19 +29,31 @@ export function LoginForm() {
       return;
     }
 
-    const profile = await getDoc(doc(db, "profiles", user.uid));
+    const [account, profile] = await Promise.all([
+      getDoc(doc(db, "users", user.uid)),
+      getDoc(doc(db, "profiles", user.uid)),
+    ]);
+
     if (!profile.exists()) {
-      router.push("/crear-perfil?google=1");
+      router.replace("/crear-perfil?google=1");
       return;
     }
-    setSuccess(true);
+
+    const accountType = String(account.data()?.accountType ?? profile.data().kind ?? "persona");
+    if (accountType === "empresa" || profile.data().kind === "empresa") {
+      router.replace("/mi-empresa");
+      router.refresh();
+      return;
+    }
+
+    router.replace("/mi-perfil");
+    router.refresh();
   }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
     setLoading(true);
-
     const form = new FormData(event.currentTarget);
     const email = String(form.get("email") ?? "").trim().toLowerCase();
     const password = String(form.get("password") ?? "");
@@ -70,22 +81,11 @@ export function LoginForm() {
     }
   }
 
-  if (success) {
-    return (
-      <div className="auth-success">
-        <CheckCircle2 size={38} />
-        <h2>Sesión iniciada.</h2>
-        <p>Ya podés administrar tu cuenta y tu perfil de Germina.</p>
-        <Link href="/mi-perfil" className="btn btn-primary btn-lg">Ir a mi perfil <ArrowRight size={18} /></Link>
-      </div>
-    );
-  }
-
   return (
     <>
       <span className="eyebrow">ENTRAR A GERMINA</span>
       <h2>Bienvenido de vuelta.</h2>
-      <p>Accedé para administrar tu perfil y tus oportunidades.</p>
+      <p>Entrá a tu espacio de talento, emprendimiento, empresa o administración.</p>
 
       <button type="button" className="google-auth-button" onClick={handleGoogle} disabled={googleLoading || loading}>
         <span className="google-auth-mark" aria-hidden="true">G</span>
@@ -100,7 +100,7 @@ export function LoginForm() {
         {error ? <div className="form-error" role="alert">{error}</div> : null}
         <button type="submit" className="btn btn-primary btn-lg" disabled={loading || googleLoading}>{loading ? "Entrando..." : <>Entrar <ArrowRight size={18} /></>}</button>
       </form>
-      <small>¿Todavía no tenés perfil? <Link href="/crear-perfil">Crealo gratis</Link></small>
+      <small>¿Todavía no tenés cuenta? <Link href="/crear-perfil">Creala gratis</Link></small>
     </>
   );
 }

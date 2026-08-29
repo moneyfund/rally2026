@@ -12,6 +12,7 @@ import "./profile-v2.css";
 import "./map-markers.css";
 import "./location-save-fix.css";
 import "./admin.css";
+import "./marketplace.css";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 
@@ -20,7 +21,7 @@ const manrope = Manrope({ subsets: ["latin"], variable: "--font-manrope" });
 
 export const metadata: Metadata = {
   title: { default: "Germina | Donde el talento crece", template: "%s | Germina" },
-  description: "Plataforma nicaragüense para descubrir, promocionar y conectar talento, habilidades y emprendimientos.",
+  description: "Plataforma nicaragüense para descubrir talento, emprendimientos, empresas y oportunidades laborales.",
   icons: {
     icon: "/germina-logo.svg",
     shortcut: "/germina-logo.svg",

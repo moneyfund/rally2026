@@ -2,6 +2,7 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+
     function signedIn() {
       return request.auth != null;
     }
@@ -18,12 +19,14 @@ service cloud.firestore {
     }
 
     function isLegacyPublicProfile() {
-      return resource.data.createdAt < timestamp.value('2026-08-28T22:51:00Z');
+      return ('createdAt' in resource.data)
+        && resource.data.createdAt < timestamp.value(1787957460000);
     }
 
     function validProfileKind() {
       return request.resource.data.kind == 'persona'
-        || request.resource.data.kind == 'negocio';
+        || request.resource.data.kind == 'negocio'
+        || request.resource.data.kind == 'empresa';
     }
 
     function validLocationConsent() {
@@ -47,6 +50,13 @@ service cloud.firestore {
         && request.resource.data.get('verificationReviewedBy', '') == resource.data.get('verificationReviewedBy', '')
         && request.resource.data.get('partner', false) == resource.data.get('partner', false)
         && request.resource.data.get('partnerSince', null) == resource.data.get('partnerSince', null);
+    }
+
+    function approvedCompany(uid) {
+      return exists(/databases/$(database)/documents/profiles/$(uid))
+        && get(/databases/$(database)/documents/profiles/$(uid)).data.kind == 'empresa'
+        && get(/databases/$(database)/documents/profiles/$(uid)).data.verified == true
+        && get(/databases/$(database)/documents/profiles/$(uid)).data.verificationStatus == 'approved';
     }
 
     match /users/{uid} {
@@ -97,13 +107,14 @@ service cloud.firestore {
         && validProfileKind()
         && validLocationConsent()
         && request.resource.data.keys().hasOnly([
-          'ownerId', 'kind', 'name', 'category', 'profession', 'headline',
-          'description', 'location', 'coordinates', 'locationPublic', 'phone',
-          'socialLinks', 'services', 'skills', 'avatarUrl', 'googlePhotoUrl',
-          'coverUrl', 'portfolio', 'available', 'verified', 'status',
-          'verificationStatus', 'verificationNote', 'verificationReviewedAt',
-          'verificationReviewedBy', 'partner', 'partnerSince',
-          'createdAt', 'updatedAt'
+          'ownerId', 'kind', 'name', 'legalName', 'companyEmail', 'website',
+          'representativeName', 'representativeRole', 'category', 'profession',
+          'headline', 'description', 'location', 'coordinates', 'locationPublic',
+          'phone', 'socialLinks', 'services', 'skills', 'avatarUrl',
+          'googlePhotoUrl', 'coverUrl', 'portfolio', 'available', 'verified',
+          'status', 'verificationStatus', 'verificationNote',
+          'verificationReviewedAt', 'verificationReviewedBy', 'partner',
+          'partnerSince', 'createdAt', 'updatedAt'
         ]);
 
       allow update: if (
@@ -119,17 +130,85 @@ service cloud.firestore {
         && validProfileKind()
         && validLocationConsent()
         && request.resource.data.keys().hasOnly([
-          'ownerId', 'kind', 'name', 'category', 'profession', 'headline',
-          'description', 'location', 'coordinates', 'locationPublic', 'phone',
-          'socialLinks', 'services', 'skills', 'avatarUrl', 'googlePhotoUrl',
-          'coverUrl', 'portfolio', 'available', 'verified', 'status',
-          'verificationStatus', 'verificationNote', 'verificationReviewedAt',
-          'verificationReviewedBy', 'partner', 'partnerSince',
-          'createdAt', 'updatedAt'
+          'ownerId', 'kind', 'name', 'legalName', 'companyEmail', 'website',
+          'representativeName', 'representativeRole', 'category', 'profession',
+          'headline', 'description', 'location', 'coordinates', 'locationPublic',
+          'phone', 'socialLinks', 'services', 'skills', 'avatarUrl',
+          'googlePhotoUrl', 'coverUrl', 'portfolio', 'available', 'verified',
+          'status', 'verificationStatus', 'verificationNote',
+          'verificationReviewedAt', 'verificationReviewedBy', 'partner',
+          'partnerSince', 'createdAt', 'updatedAt'
         ])
       );
 
       allow delete: if owns(uid) || isAdmin();
+    }
+
+    match /jobPosts/{jobId} {
+      allow read: if isAdmin()
+        || (signedIn() && resource.data.companyId == request.auth.uid)
+        || resource.data.status == 'active';
+
+      allow create: if signedIn()
+        && request.resource.data.companyId == request.auth.uid
+        && approvedCompany(request.auth.uid)
+        && request.resource.data.status == 'active'
+        && request.resource.data.featured == false
+        && request.resource.data.keys().hasOnly([
+          'companyId', 'companyName', 'companyLogo', 'title', 'category',
+          'modality', 'location', 'jobType', 'salary', 'description',
+          'requirements', 'benefits', 'status', 'featured', 'publishedAt',
+          'createdAt', 'updatedAt'
+        ]);
+
+      allow update: if isAdmin() || (
+        signedIn()
+        && resource.data.companyId == request.auth.uid
+        && request.resource.data.companyId == resource.data.companyId
+        && request.resource.data.featured == resource.data.featured
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.keys().hasOnly([
+          'companyId', 'companyName', 'companyLogo', 'title', 'category',
+          'modality', 'location', 'jobType', 'salary', 'description',
+          'requirements', 'benefits', 'status', 'featured', 'publishedAt',
+          'createdAt', 'updatedAt'
+        ])
+      );
+
+      allow delete: if isAdmin()
+        || (signedIn() && resource.data.companyId == request.auth.uid);
+
+      match /applications/{applicationId} {
+        allow read: if isAdmin()
+          || (signedIn() && resource.data.applicantId == request.auth.uid)
+          || (signedIn() && resource.data.companyId == request.auth.uid);
+
+        allow create: if signedIn()
+          && request.resource.data.applicantId == request.auth.uid
+          && request.resource.data.applicantProfileId == request.auth.uid
+          && request.resource.data.jobId == jobId
+          && get(/databases/$(database)/documents/jobPosts/$(jobId)).data.status == 'active'
+          && request.resource.data.companyId == get(/databases/$(database)/documents/jobPosts/$(jobId)).data.companyId
+          && get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data.kind != 'empresa'
+          && request.resource.data.status == 'sent'
+          && request.resource.data.keys().hasOnly([
+            'jobId', 'jobTitle', 'companyId', 'applicantId', 'applicantName',
+            'applicantEmail', 'applicantPhone', 'applicantProfileId', 'message',
+            'status', 'createdAt'
+          ]);
+
+        allow update: if isAdmin() || (
+          signedIn()
+          && resource.data.companyId == request.auth.uid
+          && request.resource.data.companyId == resource.data.companyId
+          && request.resource.data.applicantId == resource.data.applicantId
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
+        );
+
+        allow delete: if isAdmin()
+          || (signedIn() && resource.data.companyId == request.auth.uid)
+          || (signedIn() && resource.data.applicantId == request.auth.uid);
+      }
     }
 
     match /{document=**} {

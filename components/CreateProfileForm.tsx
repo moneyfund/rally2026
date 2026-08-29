@@ -1,15 +1,23 @@
 "use client";
 
-import { ArrowRight, BriefcaseBusiness, CheckCircle2, LockKeyhole, Mail, MapPin, UserRound } from "lucide-react";
+import { ArrowRight, BriefcaseBusiness, Building2, CheckCircle2, LockKeyhole, Mail, MapPin, UserRound } from "lucide-react";
 import { createUserWithEmailAndPassword, deleteUser, onAuthStateChanged, signOut, updateProfile, type User } from "firebase/auth";
 import { doc, getDoc, serverTimestamp, writeBatch } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { auth, db } from "@/lib/firebase";
 import { firebaseMessage } from "@/lib/firebase-errors";
 import { signInWithGoogle } from "@/lib/google-auth";
+import type { ProfileKind } from "@/lib/profile-types";
+
+const profileCategories = ["Diseño", "Tecnología", "Fotografía", "Gastronomía", "Artesanía", "Servicios"];
+const companyCategories = ["Tecnología", "Construcción", "Finanzas", "Comercio", "Servicios profesionales", "Industria", "Turismo", "Educación", "Salud", "Logística", "Otros"];
+
+function routeForKind(kind: ProfileKind) {
+  return kind === "empresa" ? "/mi-empresa" : "/mi-perfil";
+}
 
 export function CreateProfileForm() {
-  const [kind, setKind] = useState<"persona" | "negocio">("persona");
+  const [kind, setKind] = useState<ProfileKind>("persona");
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
@@ -19,19 +27,17 @@ export function CreateProfileForm() {
 
   useEffect(() => {
     if (typeof window === "undefined" || new URLSearchParams(window.location.search).get("google") !== "1") return;
-
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    return onAuthStateChanged(auth, async (user) => {
       if (!user || !user.providerData.some((provider) => provider.providerId === "google.com")) return;
       const existingProfile = await getDoc(doc(db, "profiles", user.uid));
       if (existingProfile.exists()) {
-        window.location.replace("/mi-perfil");
+        const existingKind = existingProfile.data().kind === "empresa" ? "empresa" : existingProfile.data().kind === "negocio" ? "negocio" : "persona";
+        window.location.replace(routeForKind(existingKind));
         return;
       }
       setGoogleUser(user);
       setRegisteredEmail(user.email ?? "");
     });
-
-    return unsubscribe;
   }, []);
 
   async function connectGoogle() {
@@ -41,7 +47,8 @@ export function CreateProfileForm() {
       const user = await signInWithGoogle();
       const existingProfile = await getDoc(doc(db, "profiles", user.uid));
       if (existingProfile.exists()) {
-        window.location.assign("/mi-perfil");
+        const existingKind = existingProfile.data().kind === "empresa" ? "empresa" : existingProfile.data().kind === "negocio" ? "negocio" : "persona";
+        window.location.assign(routeForKind(existingKind));
         return;
       }
       setGoogleUser(user);
@@ -94,6 +101,11 @@ export function CreateProfileForm() {
       const phone = String(form.get("phone") ?? "").trim();
       const headline = String(form.get("headline") ?? "").trim();
       const description = String(form.get("description") ?? "").trim();
+      const legalName = String(form.get("legalName") ?? "").trim();
+      const companyEmail = String(form.get("companyEmail") ?? email).trim().toLowerCase();
+      const website = String(form.get("website") ?? "").trim();
+      const representativeName = String(form.get("representativeName") ?? "").trim();
+      const representativeRole = String(form.get("representativeRole") ?? "").trim();
       const skills = String(form.get("skills") ?? "")
         .split(",")
         .map((skill) => skill.trim())
@@ -125,6 +137,11 @@ export function CreateProfileForm() {
         ownerId: uid,
         kind,
         name,
+        legalName: kind === "empresa" ? legalName : "",
+        companyEmail: kind === "empresa" ? companyEmail : "",
+        website: kind === "empresa" ? website : "",
+        representativeName: kind === "empresa" ? representativeName : "",
+        representativeRole: kind === "empresa" ? representativeRole : "",
         category,
         profession: headline,
         location,
@@ -134,7 +151,7 @@ export function CreateProfileForm() {
         skills,
         services: skills,
         socialLinks: {
-          website: "",
+          website,
           whatsapp: phone,
           facebook: "",
           instagram: "",
@@ -142,11 +159,16 @@ export function CreateProfileForm() {
         },
         avatarUrl: "",
         googlePhotoUrl: user.photoURL ?? "",
+        coverUrl: "",
         portfolio: [],
-        available: true,
+        available: kind !== "empresa",
         verified: false,
+        verificationStatus: "pending",
+        verificationNote: "",
+        partner: false,
         status: "active",
         coordinates: null,
+        locationPublic: false,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
@@ -160,7 +182,7 @@ export function CreateProfileForm() {
         try {
           await deleteUser(createdUser);
         } catch {
-          // Keep the original Firebase error as the useful message for the user.
+          // Preserve the original Firebase error.
         }
       }
       setError(firebaseMessage(caught));
@@ -170,40 +192,34 @@ export function CreateProfileForm() {
   }
 
   if (submitted) {
+    const isCompany = kind === "empresa";
     return (
       <div className="success-card">
         <CheckCircle2 size={42} />
-        <h2>Tu cuenta de Germina está lista.</h2>
-        <p>Tu acceso <strong>{registeredEmail}</strong> quedó conectado y tu perfil fue guardado en Firestore.</p>
-        <a className="btn btn-primary" href="/mi-perfil">Completar mi perfil</a>
+        <h2>{isCompany ? "Solicitud empresarial recibida." : "Tu cuenta de Germina está lista."}</h2>
+        <p>{isCompany ? <>La cuenta <strong>{registeredEmail}</strong> quedó creada. Administración revisará la empresa antes de habilitar vacantes y publicación pública.</> : <>Tu acceso <strong>{registeredEmail}</strong> quedó conectado y tu perfil fue guardado.</>}</p>
+        <a className="btn btn-primary" href={routeForKind(kind)}>{isCompany ? "Ir a Mi empresa" : "Completar mi perfil"}</a>
       </div>
     );
   }
 
+  const categories = kind === "empresa" ? companyCategories : profileCategories;
+
   return (
     <form className="profile-form" onSubmit={handleSubmit}>
-      <div className="profile-type-grid">
+      <div className="profile-type-grid profile-type-grid-three">
         <button type="button" className={kind === "persona" ? "type-card active" : "type-card"} onClick={() => setKind("persona")}><UserRound size={23} /><strong>Soy talento</strong><span>Quiero mostrar mis habilidades y servicios.</span></button>
-        <button type="button" className={kind === "negocio" ? "type-card active" : "type-card"} onClick={() => setKind("negocio")}><BriefcaseBusiness size={23} /><strong>Tengo un negocio</strong><span>Quiero promocionar mi emprendimiento.</span></button>
+        <button type="button" className={kind === "negocio" ? "type-card active" : "type-card"} onClick={() => setKind("negocio")}><BriefcaseBusiness size={23} /><strong>Tengo un emprendimiento</strong><span>Quiero promocionar mi negocio y sus servicios.</span></button>
+        <button type="button" className={kind === "empresa" ? "type-card active" : "type-card"} onClick={() => setKind("empresa")}><Building2 size={23} /><strong>Represento una empresa</strong><span>Quiero publicar vacantes y gestionar postulaciones.</span></button>
       </div>
 
-      <div className="form-section-title">
-        <span>1</span>
-        <div><strong>Datos de acceso</strong><small>Elegí Google o correo y contraseña. No necesitás Google para usar Germina.</small></div>
-      </div>
+      <div className="form-section-title"><span>1</span><div><strong>Datos de acceso</strong><small>Elegí Google o correo y contraseña para crear tu cuenta.</small></div></div>
 
       {googleUser ? (
-        <div className="google-connected-card">
-          <span className="google-auth-mark" aria-hidden="true">G</span>
-          <div><strong>Cuenta de Google conectada</strong><small>{googleUser.email}</small></div>
-          <button type="button" onClick={disconnectGoogle}>Usar otro método</button>
-        </div>
+        <div className="google-connected-card"><span className="google-auth-mark" aria-hidden="true">G</span><div><strong>Cuenta de Google conectada</strong><small>{googleUser.email}</small></div><button type="button" onClick={disconnectGoogle}>Usar otro método</button></div>
       ) : (
         <>
-          <button type="button" className="google-auth-button google-auth-button-wide" onClick={connectGoogle} disabled={googleLoading || loading}>
-            <span className="google-auth-mark" aria-hidden="true">G</span>
-            {googleLoading ? "Conectando con Google..." : "Continuar con Google"}
-          </button>
+          <button type="button" className="google-auth-button google-auth-button-wide" onClick={connectGoogle} disabled={googleLoading || loading}><span className="google-auth-mark" aria-hidden="true">G</span>{googleLoading ? "Conectando con Google..." : "Continuar con Google"}</button>
           <div className="auth-divider"><span>o creá tu acceso con correo</span></div>
           <div className="form-grid">
             <label className="form-span"><span>Correo electrónico</span><div className="input-icon"><Mail size={16} /><input name="email" required type="email" autoComplete="email" placeholder="tu@correo.com" /></div></label>
@@ -213,22 +229,36 @@ export function CreateProfileForm() {
         </>
       )}
 
-      <div className="form-section-title">
-        <span>2</span>
-        <div><strong>Tu perfil público</strong><small>Esta información será visible para personas y empresas que busquen talento.</small></div>
-      </div>
+      <div className="form-section-title"><span>2</span><div><strong>{kind === "empresa" ? "Información empresarial" : "Tu perfil público"}</strong><small>{kind === "empresa" ? "Estos datos serán revisados por administración antes de publicar la empresa." : "Esta información será visible cuando el perfil sea aprobado."}</small></div></div>
       <div className="form-grid">
-        <label><span>{kind === "persona" ? "Nombre completo" : "Nombre del negocio"}</span><input key={googleUser?.uid ?? "manual-name"} name="name" required defaultValue={googleUser?.displayName ?? ""} placeholder={kind === "persona" ? "Ej. Ana Martínez" : "Ej. Taller Norte"} /></label>
-        <label><span>Categoría</span><select name="category" required defaultValue=""><option value="" disabled>Seleccioná una categoría</option><option>Diseño</option><option>Tecnología</option><option>Fotografía</option><option>Gastronomía</option><option>Artesanía</option><option>Servicios</option></select></label>
+        <label><span>{kind === "persona" ? "Nombre completo" : kind === "empresa" ? "Nombre comercial" : "Nombre del emprendimiento"}</span><input key={googleUser?.uid ?? "manual-name"} name="name" required defaultValue={googleUser?.displayName ?? ""} placeholder={kind === "persona" ? "Ej. Ana Martínez" : kind === "empresa" ? "Ej. Grupo Horizonte" : "Ej. Taller Norte"} /></label>
+        <label><span>{kind === "empresa" ? "Sector" : "Categoría"}</span><select name="category" required defaultValue=""><option value="" disabled>Seleccioná una opción</option>{categories.map((item) => <option key={item}>{item}</option>)}</select></label>
         <label><span>Ciudad / departamento</span><div className="input-icon"><MapPin size={16} /><input name="location" required placeholder="Ej. Managua" /></div></label>
         <label><span>Teléfono o WhatsApp</span><input name="phone" placeholder="+505 8888 8888" /></label>
-        <label className="form-span"><span>¿Qué hacés?</span><input name="headline" required placeholder="Ej. Diseño identidades visuales para pequeños negocios" /></label>
-        <label className="form-span"><span>Contanos sobre tu trabajo</span><textarea name="description" required rows={5} placeholder="Describí tu experiencia, lo que ofrecés y qué tipo de oportunidades buscás." /></label>
-        <label className="form-span"><span>Habilidades principales</span><input name="skills" placeholder="Branding, fotografía, repostería..." /></label>
+
+        {kind === "empresa" ? (
+          <>
+            <label className="form-span"><span>Razón social / nombre legal</span><input name="legalName" required placeholder="Nombre registrado legalmente" /></label>
+            <label><span>Correo corporativo</span><input name="companyEmail" required type="email" placeholder="rrhh@empresa.com" /></label>
+            <label><span>Sitio web</span><input name="website" placeholder="https://empresa.com" /></label>
+            <label><span>Representante</span><input name="representativeName" required placeholder="Nombre de la persona responsable" /></label>
+            <label><span>Cargo del representante</span><input name="representativeRole" required placeholder="Ej. Gerente de RRHH" /></label>
+            <label className="form-span"><span>Presentación de la empresa</span><input name="headline" required placeholder="Ej. Tecnología nicaragüense enfocada en soluciones financieras" /></label>
+            <label className="form-span"><span>Descripción</span><textarea name="description" required rows={5} placeholder="Contanos qué hace la empresa, su cultura y el tipo de talento que busca." /></label>
+            <label className="form-span"><span>Áreas de contratación</span><input name="skills" placeholder="Desarrollo, ventas, operaciones, diseño..." /></label>
+          </>
+        ) : (
+          <>
+            <label className="form-span"><span>¿Qué hacés?</span><input name="headline" required placeholder="Ej. Diseño identidades visuales para pequeños negocios" /></label>
+            <label className="form-span"><span>Contanos sobre tu trabajo</span><textarea name="description" required rows={5} placeholder="Describí tu experiencia, lo que ofrecés y qué tipo de oportunidades buscás." /></label>
+            <label className="form-span"><span>Habilidades principales</span><input name="skills" placeholder="Branding, fotografía, repostería..." /></label>
+          </>
+        )}
       </div>
 
+      {kind === "empresa" ? <div className="company-registration-note"><Building2 size={19} /><div><strong>Verificación empresarial obligatoria</strong><span>Después de crear la cuenta podrás subir documentación en “Mi empresa”. Las vacantes se habilitan únicamente cuando administración aprueba la solicitud.</span></div></div> : null}
       {error ? <div className="form-error" role="alert">{error}</div> : null}
-      <div className="form-footer"><p>Explorar Germina es público. Para crear o modificar información sí necesitamos una cuenta.</p><button className="btn btn-primary btn-lg" type="submit" disabled={loading || googleLoading}>{loading ? "Guardando perfil..." : <>Crear cuenta y perfil <ArrowRight size={18} /></>}</button></div>
+      <div className="form-footer"><p>{kind === "empresa" ? "La información empresarial permanece fuera del directorio público hasta ser aprobada." : "Los perfiles nuevos pasan por revisión antes de aparecer públicamente."}</p><button className="btn btn-primary btn-lg" type="submit" disabled={loading || googleLoading}>{loading ? "Creando cuenta..." : <>Crear cuenta {kind === "empresa" ? "empresarial" : "y perfil"} <ArrowRight size={18} /></>}</button></div>
     </form>
   );
 }
