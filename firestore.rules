@@ -58,6 +58,15 @@ service cloud.firestore {
         && request.resource.data.get('partnerSince', null) == resource.data.get('partnerSince', null);
     }
 
+    function ownerProfileKindAllowed(uid) {
+      return request.resource.data.kind == resource.data.kind
+        || (
+          resource.data.get('verified', false) == false
+          && exists(/databases/$(database)/documents/users/$(uid))
+          && get(/databases/$(database)/documents/users/$(uid)).data.accountType == request.resource.data.kind
+        );
+    }
+
     function approvedCompany(uid) {
       return exists(/databases/$(database)/documents/profiles/$(uid))
         && get(/databases/$(database)/documents/profiles/$(uid)).data.kind == 'empresa'
@@ -104,6 +113,11 @@ service cloud.firestore {
       allow read: if isAdmin();
     }
 
+    // Required for AdminDashboard collectionGroup(db, "applications").
+    match /{path=**}/applications/{applicationId} {
+      allow read: if isAdmin();
+    }
+
     match /profiles/{uid} {
       allow read: if owns(uid)
         || isAdmin()
@@ -138,7 +152,7 @@ service cloud.firestore {
         && resource.data.ownerId == uid
         && request.resource.data.ownerId == uid
         && request.resource.data.ownerId == resource.data.ownerId
-        && request.resource.data.kind == resource.data.kind
+        && ownerProfileKindAllowed(uid)
         && adminProfileFieldsUnchanged()
         && validProfileKind()
         && validLocationConsent()
