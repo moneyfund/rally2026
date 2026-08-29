@@ -31,7 +31,7 @@ const VERIFICATION_ROLLOUT_AT = new Date("2026-08-28T22:51:00.000Z");
 function snapshotToProfiles(snapshot: QuerySnapshot<DocumentData>): DirectoryProfile[] {
   return snapshot.docs.map((item) => {
     const data = item.data();
-    const kind = data.kind === "empresa" ? "empresa" : data.kind === "negocio" ? "negocio" : "persona";
+    const kind: DirectoryProfile["kind"] = data.kind === "empresa" ? "empresa" : data.kind === "negocio" ? "negocio" : "persona";
     const skills = Array.isArray(data.services) ? data.services.map(String) : Array.isArray(data.skills) ? data.skills.map(String) : [];
     return {
       id: item.id,
