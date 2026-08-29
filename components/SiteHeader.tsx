@@ -11,6 +11,7 @@ import { auth, db } from "@/lib/firebase";
 const ADMIN_EMAIL = "norvingarcia220@gmail.com";
 
 const navItems = [
+  { href: "/", label: "Inicio" },
   { href: "/descubrir", label: "Descubrir" },
   { href: "/mapa", label: "Mapa" },
   { href: "/como-funciona", label: "Cómo funciona" },
